@@ -1,4 +1,3 @@
-// src/hooks/useMintNFT.ts
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
 import { CONTRACT_CONFIG } from "../config/contract";
@@ -12,7 +11,7 @@ export interface UseMintNFTParams {
 export const useMintNFT = ({ onSuccess, onError }: UseMintNFTParams = {}) => {
   const [mintQuantity, setMintQuantity] = useState<number>(1);
 
-  // Hook untuk menulis ke contract
+  // Hook for writing to the contract
   const {
     writeContract,
     data: txHash,
@@ -20,7 +19,7 @@ export const useMintNFT = ({ onSuccess, onError }: UseMintNFTParams = {}) => {
     error: writeError,
   } = useWriteContract();
 
-  // Hook untuk menunggu konfirmasi transaksi
+  // Hook for waiting for transaction confirmation
   const {
     isLoading: isConfirming,
     isSuccess: isConfirmed,
