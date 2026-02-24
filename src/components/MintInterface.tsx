@@ -60,7 +60,7 @@ export const MintInterface = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg">
+    <div className="max-w-2xl mx-auto mt-6 p-6 bg-white rounded-xl shadow-lg">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Mint MyProjectNFT</h2>
