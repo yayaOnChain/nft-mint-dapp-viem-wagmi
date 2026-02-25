@@ -1,3 +1,4 @@
+import { http, webSocket } from "wagmi";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { mainnet, sepolia } from "wagmi/chains";
 
@@ -10,6 +11,21 @@ if (!projectId) {
   );
 }
 
+// Check if WebSocket is enabled via environment variable
+const hasWebSocket: boolean = import.meta.env.VITE_USE_WEBSOCKETS === "true";
+
+// Define transports for development (HTTP) environment
+const devTransports = {
+  [mainnet.id]: http(import.meta.env.VITE_RPC_URL_MAINNET),
+  [sepolia.id]: http(import.meta.env.VITE_RPC_URL_SEPOLIA),
+};
+
+// Define transports for production (WebSocket) environment
+const prodTransports = {
+  [mainnet.id]: webSocket(import.meta.env.VITE_ALCHEMY_WS_MAINNET),
+  [sepolia.id]: webSocket(import.meta.env.VITE_ALCHEMY_WS_SEPOLIA),
+};
+
 // Create Wagmi config with RainbowKit default setup
 // This automatically includes WalletConnect, Injected (MetaMask), and Coinbase connectors
 export const config = getDefaultConfig({
@@ -17,4 +33,6 @@ export const config = getDefaultConfig({
   projectId: projectId,
   chains: [mainnet, sepolia],
   ssr: false, // Set to true if you are using Next.js, false for Vite/CRA
+  // Use WebSocket transports in production for real-time event listening, HTTP in development
+  transports: hasWebSocket ? prodTransports : devTransports,
 });
