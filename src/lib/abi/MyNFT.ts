@@ -1,6 +1,6 @@
 // ABI for MyNFT contract - only include functions needed for frontend interaction
 // Using 'as const' enables TypeScript type inference with Wagmi/Viem
-export const myNftAbi = [
+export const MyNftAbi = [
   // Custom contract functions
   {
     inputs: [{ internalType: "uint256", name: "quantity", type: "uint256" }],
