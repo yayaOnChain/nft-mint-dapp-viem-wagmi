@@ -7,7 +7,8 @@ import {
   useBalance,
 } from "wagmi";
 import { formatEther } from "viem";
-import { myNftAbi } from "../lib/abi/MyNFT";
+import { MyNftAbi } from "../lib/abi/MyNFT";
+import { RecentMintsDisplay } from "./RecentMintsDisplay";
 
 // Replace with your actual deployed contract address
 // Use type assertion to ensure it's a valid Ethereum address format
@@ -20,25 +21,25 @@ export const NftMinter = () => {
   // Read contract constants and state
   const { data: totalMinted, refetch: refetchTotalMinted } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: myNftAbi,
+    abi: MyNftAbi,
     functionName: "totalMinted",
   });
 
   const { data: maxSupply } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: myNftAbi,
+    abi: MyNftAbi,
     functionName: "MAX_SUPPLY",
   });
 
   const { data: mintPrice } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: myNftAbi,
+    abi: MyNftAbi,
     functionName: "MINT_PRICE",
   });
 
   const { data: userBalance } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: myNftAbi,
+    abi: MyNftAbi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
   });
@@ -83,7 +84,7 @@ export const NftMinter = () => {
     // Execute mint with correct value and args
     writeContract({
       address: CONTRACT_ADDRESS,
-      abi: myNftAbi,
+      abi: MyNftAbi,
       functionName: "mint",
       args: [BigInt(quantity)], // quantity as uint256
       value: totalCost, // Send ETH equal to MINT_PRICE * quantity
@@ -278,6 +279,9 @@ export const NftMinter = () => {
           <p className="text-yellow-400 text-sm">⚠️ {getValidationError()}</p>
         )}
       </div>
+
+      {/* Add real-time event listener display */}
+      <RecentMintsDisplay />
 
       {/* User Info Footer */}
       <div className="mt-6 pt-4 border-t border-gray-700 text-xs text-gray-500">
