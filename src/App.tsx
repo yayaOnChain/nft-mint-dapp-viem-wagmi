@@ -1,4 +1,4 @@
-import { CustomConnectButton } from "./components/ConnectButton";
+import { CustomConnectButton } from "./components/CustomConnectButton";
 import { NftMinter } from "./components/NftMinter";
 import { useAccount } from "wagmi";
 
