@@ -1,5 +1,7 @@
 import { CustomConnectButton } from "./components/CustomConnectButton";
 import { NftMinter } from "./components/NftMinter";
+import { UserNFTGallery } from "./components/UserNFTGallery";
+import { TransactionHistoryTable } from "./components/TransactionHistoryTable";
 import { useAccount } from "wagmi";
 
 function App() {
@@ -7,23 +9,36 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header with Connect Button */}
       <header className="border-b border-gray-800">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">NFT Mint DApp</h1>
+          <h1 className="text-xl font-bold">MyProjectNFT</h1>
           <CustomConnectButton />
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto mt-10 p-4">
-        {/* Only show Minter if connected, or show prompt */}
-        {isConnected ? (
-          <NftMinter />
-        ) : (
-          <div className="text-center text-gray-400 mt-20">
-            <p>Please connect your wallet to start minting.</p>
-          </div>
+      <main className="container mx-auto p-4 max-w-4xl">
+        {/* Minting Section */}
+        <section className="mb-8">
+          {isConnected ? (
+            <NftMinter />
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              Connect your wallet to start minting
+            </div>
+          )}
+        </section>
+
+        {/* User's NFT Gallery - Only show when connected */}
+        {isConnected && (
+          <>
+            <section>
+              <UserNFTGallery />
+            </section>
+
+            <section>
+              <TransactionHistoryTable />
+            </section>
+          </>
         )}
       </main>
     </div>
