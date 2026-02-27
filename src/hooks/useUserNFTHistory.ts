@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
+import { useToast } from "./useToast";
 import type { UserNFT, AlchemyNFTResponse } from "../types/nft";
 
 interface UseUserNFTHistoryProps {
@@ -21,6 +22,9 @@ export const useUserNFTHistory = ({
 
   const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
   const alchemyNetwork = import.meta.env.VITE_ALCHEMY_NETWORK || "eth-sepolia";
+
+  const toast = useToast();
+  const showErrorDebounced = toast.createDebouncedToast("error", 2000);
 
   useEffect(() => {
     let mounted = true;
@@ -78,6 +82,12 @@ export const useUserNFTHistory = ({
             err instanceof Error ? err.message : "Failed to fetch NFT history",
           );
         }
+
+        // Only show error once per 2 seconds
+        showErrorDebounced(
+          "Failed to load NFTs",
+          err instanceof Error ? err.message : "Unknown error",
+        );
       } finally {
         if (mounted) {
           setIsLoading(false);
