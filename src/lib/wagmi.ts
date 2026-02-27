@@ -16,7 +16,6 @@ const hasWebSocket: boolean = import.meta.env.VITE_USE_WEBSOCKETS === "true";
 
 // Define transports for development (HTTP) environment
 const devTransports = {
-  [mainnet.id]: http(import.meta.env.VITE_RPC_URL_MAINNET),
   [sepolia.id]: http(import.meta.env.VITE_RPC_URL_SEPOLIA),
 };
 
@@ -31,7 +30,7 @@ const prodTransports = {
 export const config = getDefaultConfig({
   appName: "My NFT Minting DApp",
   projectId: projectId,
-  chains: [mainnet, sepolia],
+  chains: hasWebSocket ? [mainnet, sepolia] : [sepolia], // Use mainnet in production, sepolia in development
   ssr: false, // Set to true if you are using Next.js, false for Vite/CRA
   // Use WebSocket transports in production for real-time event listening, HTTP in development
   transports: hasWebSocket ? prodTransports : devTransports,
