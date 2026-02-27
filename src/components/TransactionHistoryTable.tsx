@@ -141,7 +141,9 @@ export const TransactionHistoryTable = () => {
 
   return (
     <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
-      <h3 className="text-lg font-semibold mb-4">Transaction History</h3>
+      <h3 className="text-lg font-semibold mb-4">
+        Transaction History (latest 10 transactions)
+      </h3>
 
       {isLoading && (
         <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
