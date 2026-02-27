@@ -78,7 +78,7 @@ export const TransactionHistoryTable = () => {
             }),
           );
 
-          setTransactions(txHistory.slice(0, 10)); // Show latest 10 transactions
+          setTransactions(txHistory.slice(-10)); // Show latest 10 transactions
           const txsWithMissingTimestamp = txHistory.filter(
             (tx) => tx.timestamp === 0,
           );
@@ -145,7 +145,6 @@ export const TransactionHistoryTable = () => {
 
       {isLoading && (
         <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
-          <h3 className="text-lg font-semibold mb-4">Transaction History</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -181,48 +180,52 @@ export const TransactionHistoryTable = () => {
       )}
 
       {!isLoading && !error && transactions.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-700 text-left">
-                <th className="pb-3 text-gray-400 font-medium">Token ID</th>
-                <th className="pb-3 text-gray-400 font-medium">Action</th>
-                <th className="pb-3 text-gray-400 font-medium">Date</th>
-                <th className="pb-3 text-gray-400 font-medium">Transaction</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((tx) => (
-                <tr key={tx.txHash} className="border-b border-gray-700/50">
-                  <td className="py-3 font-mono">#{tx.tokenId}</td>
-                  <td className="py-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-semibold ${
-                        tx.action === "mint"
-                          ? "bg-green-900/50 text-green-400"
-                          : "bg-blue-900/50 text-blue-400"
-                      }`}
-                    >
-                      {tx.action.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="py-3 text-gray-400">
-                    {formatTime(tx.timestamp)}
-                  </td>
-                  <td className="py-3">
-                    <a
-                      href={`https://sepolia.etherscan.io/tx/${tx.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-400 hover:text-purple-300 transition-colors"
-                    >
-                      {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)} ↗
-                    </a>
-                  </td>
+        <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700 text-left">
+                  <th className="pb-3 text-gray-400 font-medium">Token ID</th>
+                  <th className="pb-3 text-gray-400 font-medium">Action</th>
+                  <th className="pb-3 text-gray-400 font-medium">Date</th>
+                  <th className="pb-3 text-gray-400 font-medium">
+                    Transaction
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr key={tx.txHash} className="border-b border-gray-700/50">
+                    <td className="py-3 font-mono">#{tx.tokenId}</td>
+                    <td className="py-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          tx.action === "mint"
+                            ? "bg-green-900/50 text-green-400"
+                            : "bg-blue-900/50 text-blue-400"
+                        }`}
+                      >
+                        {tx.action.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="py-3 text-gray-400">
+                      {formatTime(tx.timestamp)}
+                    </td>
+                    <td className="py-3">
+                      <a
+                        href={`https://sepolia.etherscan.io/tx/${tx.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-400 hover:text-purple-300 transition-colors"
+                      >
+                        {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)} ↗
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
