@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
+import { Toaster } from "sonner";
 import { config } from "./lib/wagmi";
 import "./index.css"; // Tailwind CSS styles
 import App from "./App";
@@ -28,6 +29,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           })}
         >
           <App />
+          {/* Toast Provider - positioned at bottom-right */}
+          <Toaster
+            position="bottom-right"
+            richColors
+            theme="dark"
+            duration={4000}
+            visibleToasts={5}
+          />
         </RainbowKitProvider>
       </WagmiProvider>
     </QueryClientProvider>
