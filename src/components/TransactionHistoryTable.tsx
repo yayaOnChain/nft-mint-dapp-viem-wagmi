@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
+import { TransactionRowSkeleton } from "./ui/Skeleton";
 import type { TransactionHistoryItem } from "../types/nft";
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`;
@@ -62,17 +63,51 @@ export const TransactionHistoryTable = () => {
           // Transform to our TransactionHistoryItem type
           const txHistory: TransactionHistoryItem[] = data.result.transfers.map(
             (tx: any) => ({
-              tokenId: tx.tokenId,
+              tokenId: parseInt(tx.tokenId, 16),
               txHash: tx.hash as `0x${string}`,
               timestamp: tx.blockTimestamp
                 ? new Date(tx.blockTimestamp).getTime()
-                : Date.now(),
+                : 0,
+              blockNum: tx.blockNum,
               status: "success" as const,
-              action: tx.type === "mint" ? "mint" : "transfer",
+              action:
+                tx.from === "0x0000000000000000000000000000000000000000" ||
+                tx.type === "mint"
+                  ? "mint"
+                  : "transfer",
             }),
           );
 
-          setTransactions(txHistory.slice(0, 10)); // Show last 10
+          setTransactions(txHistory.slice(0, 10)); // Show latest 10 transactions
+          const txsWithMissingTimestamp = txHistory.filter(
+            (tx) => tx.timestamp === 0,
+          );
+          if (txsWithMissingTimestamp.length > 0) {
+            const timestamps = await Promise.all(
+              txsWithMissingTimestamp.map(async (tx: any) => {
+                const res = await fetch(baseUrl, {
+                  method: "POST",
+                  body: JSON.stringify({
+                    jsonrpc: "2.0",
+                    id: 1,
+                    method: "eth_getBlockByNumber",
+                    params: [tx.blockNum, false],
+                  }),
+                });
+                const data = await res.json();
+                return {
+                  txHash: tx.txHash,
+                  timestamp: parseInt(data.result.timestamp, 16) * 1000,
+                };
+              }),
+            );
+            setTransactions((prev) =>
+              prev.map((tx) => {
+                const found = timestamps.find((t) => t.txHash === tx.txHash);
+                return found ? { ...tx, timestamp: found.timestamp } : tx;
+              }),
+            );
+          }
         }
       } catch (err) {
         console.error("[TransactionHistory] Error:", err);
@@ -109,8 +144,27 @@ export const TransactionHistoryTable = () => {
       <h3 className="text-lg font-semibold mb-4">Transaction History</h3>
 
       {isLoading && (
-        <div className="text-center py-8 text-gray-400">
-          Loading transactions...
+        <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
+          <h3 className="text-lg font-semibold mb-4">Transaction History</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700 text-left">
+                  <th className="pb-3 text-gray-400 font-medium">Token ID</th>
+                  <th className="pb-3 text-gray-400 font-medium">Action</th>
+                  <th className="pb-3 text-gray-400 font-medium">Date</th>
+                  <th className="pb-3 text-gray-400 font-medium">
+                    Transaction
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...Array(5)].map((_, i) => (
+                  <TransactionRowSkeleton key={i} />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

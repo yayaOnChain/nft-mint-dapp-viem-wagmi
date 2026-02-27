@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUserNFTHistory } from "../hooks/useUserNFTHistory";
+import { NFTCardSkeleton } from "./ui/Skeleton";
 import type { UserNFT } from "../types/nft";
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`;
@@ -16,13 +17,13 @@ export const UserNFTGallery = () => {
   if (isLoading) {
     return (
       <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
-        <h3 className="text-lg font-semibold mb-4">My NFTs</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">My NFTs</h3>
+          <span className="text-sm text-gray-400">Loading...</span>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="bg-gray-700 rounded-lg aspect-square mb-2" />
-              <div className="h-4 bg-gray-700 rounded w-3/4" />
-            </div>
+            <NFTCardSkeleton key={i} />
           ))}
         </div>
       </div>
@@ -47,7 +48,7 @@ export const UserNFTGallery = () => {
       <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
         <h3 className="text-lg font-semibold mb-4">My NFTs</h3>
         <div className="text-center py-8">
-          <div className="text-4xl mb-3">🖼️</div>
+          <div className="text-4xl mb-3 animate-bounce">🖼️</div>
           <p className="text-gray-400">No NFTs owned yet</p>
           <p className="text-sm text-gray-500 mt-1">
             Mint your first NFT to see it here!
@@ -67,12 +68,17 @@ export const UserNFTGallery = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {nfts.map((nft) => (
-          <NFTCard key={`${nft.contractAddress}-${nft.tokenId}`} nft={nft} />
+        {nfts.map((nft, index) => (
+          <div
+            key={`${nft.contractAddress}-${nft.tokenId}`}
+            className="animate-fadeIn"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <NFTCard nft={nft} />
+          </div>
         ))}
       </div>
 
-      {/* Show more indicator if totalCount > displayed */}
       {totalCount > nfts.length && (
         <div className="mt-4 text-center text-sm text-gray-400">
           Showing {nfts.length} of {totalCount} NFTs

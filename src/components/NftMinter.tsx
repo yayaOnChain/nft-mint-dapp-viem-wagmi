@@ -8,7 +8,9 @@ import {
 } from "wagmi";
 import { formatEther } from "viem";
 import { MyNftAbi } from "../lib/abi/MyNFT";
-import { RecentMintsDisplay } from "./RecentMintsDisplay";
+// import { RecentMintsDisplay } from "./RecentMintsDisplay";
+import { useToast } from "../hooks/useToast";
+import { Skeleton } from "./ui/Skeleton";
 
 // Replace with your actual deployed contract address
 // Use type assertion to ensure it's a valid Ethereum address format
@@ -17,6 +19,12 @@ const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`;
 export const NftMinter = () => {
   const { address, isConnected, chain } = useAccount();
   const [quantity, setQuantity] = useState<number>(1);
+  const [toastId, setToastId] = useState<string | number | null>(null); // Track current toast ID for updates
+
+  const toast = useToast(); // Initialize toast hook
+
+  // Create debounced version of error toast
+  const showErrorDebounced = toast.createDebouncedToast("error", 1000);
 
   // Read contract constants and state
   const { data: totalMinted, refetch: refetchTotalMinted } = useReadContract({
@@ -63,6 +71,24 @@ export const NftMinter = () => {
       hash,
     });
 
+  // Show toast on transaction status changes
+  useEffect(() => {
+    if (isWriting) {
+      // toast.transaction.pending();
+      const id = toast.transaction.pending();
+      setToastId(id);
+    }
+  }, [isWriting]);
+
+  useEffect(() => {
+    if (writeError) {
+      const errorMsg = writeError.message.includes("user rejected")
+        ? "You rejected the transaction"
+        : writeError.message;
+      toast.transaction.error(errorMsg, toastId ?? null);
+    }
+  }, [writeError]);
+
   // Calculate total cost in ETH (BigInt arithmetic)
   const getTotalCost = (): bigint => {
     if (!mintPrice) return 0n;
@@ -79,7 +105,22 @@ export const NftMinter = () => {
   const handleMint = () => {
     if (!writeContract || !mintPrice) return;
 
+    // Validation errors won't spam user
+    if (!canMint()) {
+      showErrorDebounced("Cannot mint", getValidationError() || "");
+      return;
+    }
+
     const totalCost = getTotalCost();
+
+    // Show confirmation toast before wallet prompt
+    toast.info(
+      "Confirm Transaction",
+      `Minting ${quantity} NFT(s) for ${formatEther(totalCost)} ETH`,
+    );
+
+    // Success toast also debounced
+    toast.success("Mint initiated", "Check your wallet");
 
     // Execute mint with correct value and args
     writeContract({
@@ -128,14 +169,29 @@ export const NftMinter = () => {
 
   // Refetch data after successful mint
   useEffect(() => {
-    if (isConfirmed) {
+    if (isConfirmed && hash) {
+      toast.transaction.success(hash, toastId ?? null, chain?.id);
+      toast.success("NFT Minted Successfully!", `Token ID received`);
       refetchTotalMinted();
-      setQuantity(1); // Reset quantity after success
+      setQuantity(1);
     }
-  }, [isConfirmed, refetchTotalMinted]);
+  }, [isConfirmed, hash, refetchTotalMinted, chain?.id]);
 
   // Loading state for initial data fetch
   const isLoadingData = !totalMinted || !maxSupply || !mintPrice;
+
+  // Show skeleton while loading contract data
+  if (isLoadingData) {
+    return (
+      <div className="p-6 bg-gray-800 rounded-lg border border-gray-700 max-w-md mx-auto">
+        <Skeleton variant="text" className="w-1/2 h-8 mb-6" />
+        <Skeleton variant="rect" className="w-full h-2 mb-6" />
+        <Skeleton variant="rect" className="w-full h-12 mb-4" />
+        <Skeleton variant="rect" className="w-full h-12 mb-4" />
+        <Skeleton variant="rect" className="w-full h-12" />
+      </div>
+    );
+  }
 
   if (!isConnected) {
     return (
@@ -146,7 +202,7 @@ export const NftMinter = () => {
   }
 
   return (
-    <div className="p-6 border rounded-lg shadow-lg bg-gray-800 max-w-md mx-auto">
+    <div className="p-6 border rounded-lg shadow-lg bg-gray-800 max-w-md mx-auto transition-all duration-300">
       <h2 className="text-2xl font-bold mb-6 text-center">Mint MyProjectNFT</h2>
 
       {/* Progress Bar */}
@@ -163,9 +219,9 @@ export const NftMinter = () => {
             %
           </span>
         </div>
-        <div className="w-full bg-gray-700 rounded-full h-2">
+        <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
           <div
-            className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+            className="bg-linear-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-500 ease-out"
             style={{
               width: `${(Number(totalMinted || 0) / Number(maxSupply || 1000)) * 100}%`,
             }}
@@ -187,8 +243,8 @@ export const NftMinter = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50"
-            disabled={quantity <= 1}
+            disabled={quantity <= 1 || isWriting || isConfirming}
+            className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             -
           </button>
@@ -202,19 +258,13 @@ export const NftMinter = () => {
                 Math.min(10, Math.max(1, parseInt(e.target.value) || 1)),
               )
             }
-            className="w-16 text-center bg-gray-700 border border-gray-600 rounded py-1 px-2"
+            disabled={isWriting || isConfirming}
+            className="w-16 text-center bg-gray-700 border border-gray-600 rounded py-1 px-2 disabled:opacity-50"
           />
           <button
             onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-            className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50"
-            disabled={
-              quantity >= 10 ||
-              !!(
-                totalMinted &&
-                maxSupply &&
-                totalMinted + BigInt(quantity) >= maxSupply
-              )
-            }
+            disabled={quantity >= 10 || isWriting || isConfirming}
+            className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             +
           </button>
@@ -238,50 +288,88 @@ export const NftMinter = () => {
           : "Loading..."}
       </div>
 
-      {/* Mint Button */}
+      {/* Mint Button with Loading States */}
       <button
         onClick={handleMint}
         disabled={!canMint() || isWriting || isConfirming || isLoadingData}
-        className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all
+        className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 transform 
           ${
             !canMint() || isWriting || isConfirming
               ? "bg-gray-600 cursor-not-allowed"
-              : "bg-purple-600 hover:bg-purple-700 active:scale-[0.98]"
+              : "bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 active:scale-[0.98]"
           }
         `}
       >
-        {isLoadingData
-          ? "Loading..."
-          : isWriting
-            ? "Confirm in Wallet..."
-            : isConfirming
-              ? "Confirming on Chain..."
-              : "Mint NFT"}
+        {isLoadingData ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            Loading...
+          </span>
+        ) : isWriting ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            Confirm in Wallet...
+          </span>
+        ) : isConfirming ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg
+              className="animate-pulse h-5 w-5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+              />
+            </svg>
+            Confirming on Chain...
+          </span>
+        ) : (
+          "Mint NFT"
+        )}
       </button>
 
       {/* Status Messages */}
       <div className="mt-4 min-h-8">
-        {writeError && (
-          <p className="text-red-400 text-sm">
-            Error:{" "}
-            {writeError.message.includes("user rejected")
-              ? "Transaction rejected"
-              : writeError.message}
-          </p>
-        )}
-        {isConfirmed && (
-          <p className="text-green-400 text-sm">
-            ✅ Minted! View on Etherscan: {hash?.slice(0, 6)}...
-            {hash?.slice(-4)}
-          </p>
-        )}
         {!writeError && !isConfirmed && getValidationError() && (
-          <p className="text-yellow-400 text-sm">⚠️ {getValidationError()}</p>
+          <p className="text-yellow-400 text-sm animate-fadeIn">
+            ⚠️ {getValidationError()}
+          </p>
         )}
       </div>
 
       {/* Add real-time event listener display */}
-      <RecentMintsDisplay />
+      {/* <RecentMintsDisplay /> */}
 
       {/* User Info Footer */}
       <div className="mt-6 pt-4 border-t border-gray-700 text-xs text-gray-500">
