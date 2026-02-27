@@ -29,6 +29,7 @@ export interface TransactionHistoryItem {
   tokenId: string;
   txHash: `0x${string}`;
   timestamp: number;
+  blockNum: string;
   status: "success" | "pending" | "failed";
   action: "mint" | "transfer" | "burn";
 }
