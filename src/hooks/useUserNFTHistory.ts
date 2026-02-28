@@ -5,6 +5,7 @@ import type { UserNFT, AlchemyNFTResponse } from "../types/nft";
 
 interface UseUserNFTHistoryProps {
   contractAddress?: `0x${string}`; // Optional: filter by specific contract
+  refreshKey?: number; // Optional: trigger refetch when this key changes
 }
 
 /**
@@ -13,6 +14,7 @@ interface UseUserNFTHistoryProps {
  */
 export const useUserNFTHistory = ({
   contractAddress,
+  refreshKey = 0,
 }: UseUserNFTHistoryProps = {}) => {
   const { address, isConnected } = useAccount();
   const [nfts, setNfts] = useState<UserNFT[]>([]);
@@ -102,7 +104,14 @@ export const useUserNFTHistory = ({
     return () => {
       mounted = false;
     };
-  }, [address, isConnected, contractAddress, alchemyApiKey, alchemyNetwork]);
+  }, [
+    address,
+    isConnected,
+    contractAddress,
+    alchemyApiKey,
+    alchemyNetwork,
+    refreshKey,
+  ]);
 
   return { nfts, isLoading, error, totalCount };
 };

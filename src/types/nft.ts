@@ -21,15 +21,3 @@ export interface AlchemyNFTResponse {
   totalCount: number;
   blockHash?: string;
 }
-
-/**
- * Transaction history item for UI display
- */
-export interface TransactionHistoryItem {
-  tokenId: string;
-  txHash: `0x${string}`;
-  timestamp: number;
-  blockNum: string;
-  status: "success" | "pending" | "failed";
-  action: "mint" | "transfer" | "burn";
-}
