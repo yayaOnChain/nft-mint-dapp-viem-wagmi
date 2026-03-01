@@ -91,7 +91,7 @@ function App() {
                 <div className="w-1 h-8 bg-blue-600 rounded-full" />
                 <h3 className="text-2xl font-bold">Transaction History</h3>
               </div>
-              <TransactionHistory />
+              <TransactionHistory refreshKey={refreshKey} />
             </section>
           </>
         )}
