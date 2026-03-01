@@ -3,8 +3,7 @@ import { useReadContract } from "wagmi";
 import { myNftAbi } from "../../abi/myNft";
 import { useNftMintedEventsUnified } from "../../hooks";
 import type { NFTMintedEvent } from "../../hooks/useNftMintedEvents";
-
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`;
+import { contractAddress } from "../../config/env";
 
 interface MintEventWithTimestamp extends NFTMintedEvent {
   timestamp: number;
@@ -15,7 +14,7 @@ interface MintEventWithTimestamp extends NFTMintedEvent {
 export const RecentMints = () => {
   // Updated unified hook returns loading/error states
   const unifiedResult = useNftMintedEventsUnified({
-    contractAddress: CONTRACT_ADDRESS,
+    contractAddress,
     onNewMint: (event) => {
       console.log("🎉 New mint detected:", event.tokenId.toString());
     },
@@ -26,7 +25,7 @@ export const RecentMints = () => {
   const error = "error" in unifiedResult ? (unifiedResult.error as string | null) : null;
 
   const { data: mintPrice } = useReadContract({
-    address: CONTRACT_ADDRESS,
+    address: contractAddress,
     abi: myNftAbi,
     functionName: "MINT_PRICE",
   });

@@ -6,13 +6,9 @@ import { Button } from "../ui/Button";
 import { TransactionRow } from "./TransactionRow";
 import type { TransactionHistoryItem, TransactionFilter } from "../../types";
 import { TransactionRowSkeleton } from "../ui";
-import {
-  contractAddress,
-  alchemyApiKey,
-  alchemyNetwork,
-} from "../../config/env";
+import { contractAddress } from "../../config/env";
 import { CHAIN_IDS, UI_CONFIG, ERROR_MESSAGES } from "../../lib/constants";
-import type { AlchemyTransferResponse, BlockResponse } from "../../types";
+import { getAlchemyApi } from "../../services/alchemyApi";
 
 interface TransactionHistoryProps {
   refreshKey?: number; // Optional prop to trigger re-fetching transactions
@@ -52,7 +48,7 @@ export const TransactionHistory = ({
     nextPageKey?: string,
     append: boolean = false,
   ) => {
-    if (!isConnected || !address || !alchemyApiKey) {
+    if (!isConnected || !address) {
       setTransactions([]);
       setPagination((prev) => ({ ...prev, total: 0, hasMore: false }));
       setPageKey(undefined);
@@ -63,63 +59,67 @@ export const TransactionHistory = ({
     setError(null);
 
     try {
-      const baseUrl = `https://${alchemyNetwork}.g.alchemy.com/v2/${alchemyApiKey}`;
+      const alchemyApi = getAlchemyApi();
+      const limit = filter.limit || UI_CONFIG.pagination.defaultLimit;
 
-      const defaultLimit = filter.limit || UI_CONFIG.pagination.defaultLimit;
+      const { transfers, pageKey: newPageKey } =
+        await alchemyApi.getAssetTransfers({
+          address,
+          contractAddress,
+          limit,
+          pageKey: nextPageKey,
+        });
 
-      // Build request params - include pageKey if fetching next page
-      const params = {
-        fromBlock: "0x0",
-        toAddress: address,
-        contractAddresses: [contractAddress],
-        category: ["erc721"] as const,
-        withMetadata: true,
-        maxCount: `0x${defaultLimit.toString(16)}`,
-        ...(nextPageKey && { pageKey: nextPageKey }),
-      };
+      const txHistory: TransactionHistoryItem[] = transfers.map((tx) => ({
+        tokenId: tx.tokenId,
+        txHash: tx.txHash,
+        timestamp: tx.timestamp,
+        blockNum: tx.blockNum,
+        status: "success" as const,
+        action:
+          tx.from === "0x0000000000000000000000000000000000000000" ||
+          tx.type === "mint"
+            ? "mint"
+            : "transfer",
+        from: tx.from,
+        to: tx.to,
+      }));
 
-      const response = await fetch(baseUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "alchemy_getAssetTransfers",
-          params: [params],
-        }),
-      });
-
-      const data: AlchemyTransferResponse = await response.json();
-
-      if (data.error) {
-        console.error("RPC Error:", data.error.message);
-        throw new Error(data.error.message);
-      }
-
-      const txHistory: TransactionHistoryItem[] = data.result.transfers.map(
-        (tx) => ({
-          tokenId: parseInt(tx.tokenId, 16).toString(),
-          txHash: tx.hash as `0x${string}`,
-          timestamp: tx.blockTimestamp
-            ? new Date(tx.blockTimestamp).getTime()
-            : 0,
-          blockNum: tx.blockNum,
-          status: "success" as const,
-          action:
-            tx.from === "0x0000000000000000000000000000000000000000" ||
-            tx.type === "mint"
-              ? "mint"
-              : "transfer",
-          from: tx.from as `0x${string}`,
-          to: tx.to as `0x${string}`,
-        }),
+      // Fetch missing timestamps for transactions
+      const txsWithMissingTimestamp = transfers.filter(
+        (tx) => tx.timestamp === 0,
       );
+
+      let updatedTxHistory = txHistory;
+
+      if (txsWithMissingTimestamp.length > 0) {
+        const timestampsMap = new Map<`0x${string}`, number>();
+
+        for (const tx of txsWithMissingTimestamp) {
+          try {
+            const timestamp = await alchemyApi.getBlockByNumber(tx.blockNum);
+            timestampsMap.set(tx.txHash, timestamp);
+          } catch (err) {
+            console.error(
+              `Failed to fetch timestamp for block ${tx.blockNum}:`,
+              err,
+            );
+          }
+        }
+
+        updatedTxHistory = txHistory.map((tx) => {
+          const fetchedTimestamp = timestampsMap.get(tx.txHash);
+          return fetchedTimestamp
+            ? { ...tx, timestamp: fetchedTimestamp }
+            : tx;
+        });
+      }
 
       // Append new transactions or replace existing ones
       if (append) {
-        setTransactions((prev) => [...prev, ...txHistory]);
+        setTransactions((prev) => [...prev, ...updatedTxHistory]);
       } else {
-        setTransactions(txHistory);
+        setTransactions(updatedTxHistory);
       }
 
       // Update pagination state with new total and hasMore flag
@@ -130,43 +130,12 @@ export const TransactionHistory = ({
       setPagination((prev) => ({
         ...prev,
         total: newTotal,
-        hasMore: !!data.result.pageKey,
+        hasMore: !!newPageKey,
         page: append ? prev.page + 1 : 1,
       }));
 
       // Store pageKey for next pagination request
-      setPageKey(data.result.pageKey);
-
-      // Fetch missing timestamps for transactions
-      const txsWithMissingTimestamp = txHistory.filter(
-        (tx) => tx.timestamp === 0,
-      );
-      if (txsWithMissingTimestamp.length > 0) {
-        const timestamps = await Promise.all(
-          txsWithMissingTimestamp.map(async (tx) => {
-            const res = await fetch(baseUrl, {
-              method: "POST",
-              body: JSON.stringify({
-                jsonrpc: "2.0",
-                id: 1,
-                method: "eth_getBlockByNumber",
-                params: [tx.blockNum, false],
-              }),
-            });
-            const blockData: BlockResponse = await res.json();
-            return {
-              txHash: tx.txHash,
-              timestamp: parseInt(blockData.result.timestamp, 16) * 1000,
-            };
-          }),
-        );
-        setTransactions((prev) =>
-          prev.map((tx) => {
-            const found = timestamps.find((t) => t.txHash === tx.txHash);
-            return found ? { ...tx, timestamp: found.timestamp } : tx;
-          }),
-        );
-      }
+      setPageKey(newPageKey);
     } catch (err) {
       console.error("[TransactionHistory] Error:", err);
       const errorMsg =

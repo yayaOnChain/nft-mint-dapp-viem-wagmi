@@ -1,8 +1,7 @@
 import { useUserNFTHistory } from "../../hooks";
 import { NFTCardSkeleton } from "./../ui";
 import { NftCard } from "./NftCard";
-
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`;
+import { contractAddress } from "../../config/env";
 
 interface NftGalleryProps {
   refreshKey?: number; // Optional prop to trigger re-fetching NFTs
@@ -13,7 +12,7 @@ interface NftGalleryProps {
  */
 export const NftGallery = ({ refreshKey = 0 }: NftGalleryProps) => {
   const { nfts, isLoading, error, totalCount } = useUserNFTHistory({
-    contractAddress: CONTRACT_ADDRESS,
+    contractAddress,
     refreshKey,
   });
 

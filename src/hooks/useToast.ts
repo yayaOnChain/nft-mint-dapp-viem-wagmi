@@ -1,9 +1,9 @@
 import { toast } from "sonner";
-import { debounce } from "lodash";
 import { useCallback, useRef } from "react";
 
 /**
  * Custom hook for consistent toast notifications across the app
+ * Simplified version without external dependencies
  */
 export const useToast = () => {
   // Track last toast time to prevent spam
@@ -57,7 +57,6 @@ export const useToast = () => {
 
   /**
    * Show loading toast (returns dismiss function)
-   * no debounce needed for loading states
    */
   const loading = (message: string, description?: string) => {
     return toast.loading(message, {
@@ -128,7 +127,6 @@ export const useToast = () => {
           lastToastTime.current[toastKey] &&
           now - lastToastTime.current[toastKey] < 3000
         ) {
-          // 3s for tx errors
           return;
         }
 
@@ -144,20 +142,5 @@ export const useToast = () => {
     ),
   };
 
-  /**
-   * Alternative: Use lodash-style debounce for custom functions
-   * This creates a debounced version of any toast call
-   */
-  const createDebouncedToast = useCallback(
-    (type: "success" | "error" | "info", delay: number = 1000) => {
-      return debounce((message: string, description?: string) => {
-        if (type === "success") success(message, description);
-        else if (type === "error") error(message, description);
-        else info(message, description);
-      }, delay);
-    },
-    [success, error, info],
-  );
-
-  return { success, error, loading, info, transaction, createDebouncedToast };
+  return { success, error, loading, info, transaction };
 };

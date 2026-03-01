@@ -96,3 +96,16 @@ export interface TransactionPagination {
   limit: number;
   hasMore: boolean;
 }
+
+/**
+ * Transferred asset from Alchemy API (service layer format)
+ */
+export interface TransferredAsset {
+  tokenId: string;
+  txHash: `0x${string}`;
+  timestamp: number;
+  blockNum: string;
+  from: `0x${string}`;
+  to: `0x${string}`;
+  type: string;
+}
