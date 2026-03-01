@@ -1,5 +1,5 @@
 import { useWatchContractEvent } from "wagmi";
-import { MyNftAbi } from "../lib/abi/MyNFT";
+import { myNftAbi } from "../abi/myNft";
 import { useState, useEffect } from "react";
 
 // Define TypeScript interface for the NFTMinted event parameters
@@ -31,7 +31,7 @@ export const useNftMintedEvents = ({
   // Watch for NFTMinted events using Wagmi's built-in hook
   useWatchContractEvent({
     address: contractAddress,
-    abi: MyNftAbi,
+    abi: myNftAbi,
     eventName: "NFTMinted",
     // Optional: Only listen to events from specific block (for pagination)
     // fromBlock: 12345678n,
