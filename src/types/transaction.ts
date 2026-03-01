@@ -30,40 +30,37 @@ export interface TransactionHistoryItem {
 }
 
 /**
+ * Alchemy transfer item from API response
+ */
+export interface AlchemyTransfer {
+  tokenId: string;
+  hash: string;
+  blockTimestamp?: string;
+  blockNum: string;
+  from: string;
+  to?: string;
+  type?: string;
+}
+
+/**
  * Alchemy getAssetTransfers API response structure
  */
 export interface AlchemyTransferResponse {
-  jsonrpc: string;
-  id: number;
   result: {
-    transfers: Array<{
-      uniqueId: string;
-      category: string;
-      tokenId: string;
-      asset: string;
-      from: string;
-      to: string;
-      value: string | null;
-      erc721TokenId?: string;
-      erc1155Metadata?: Array<{ tokenId: string; value: string }>;
-      rawContract: {
-        value: string | null;
-        address: string;
-        decimal: string | null;
-      };
-      blockNum: string;
-      transaction: {
-        hash: string;
-        timestamp: string;
-        blockNumber: number;
-        from: string;
-        to: string;
-        value: number | string;
-        gas: number;
-        gasPrice: number;
-      };
-    }>;
+    transfers: AlchemyTransfer[];
     pageKey?: string;
+  };
+  error?: {
+    message: string;
+  };
+}
+
+/**
+ * Block response from eth_getBlockByNumber
+ */
+export interface BlockResponse {
+  result: {
+    timestamp: string;
   };
 }
 

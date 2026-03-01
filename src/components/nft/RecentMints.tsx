@@ -2,8 +2,15 @@ import { formatEther } from "viem";
 import { useReadContract } from "wagmi";
 import { myNftAbi } from "../../abi/myNft";
 import { useNftMintedEventsUnified } from "../../hooks";
+import type { NFTMintedEvent } from "../../hooks/useNftMintedEvents";
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`;
+
+interface MintEventWithTimestamp extends NFTMintedEvent {
+  timestamp: number;
+  txHash: `0x${string}`;
+  blockNumber?: bigint;
+}
 
 export const RecentMints = () => {
   // Updated unified hook returns loading/error states
@@ -13,10 +20,10 @@ export const RecentMints = () => {
       console.log("🎉 New mint detected:", event.tokenId.toString());
     },
   });
-  const recentMints = unifiedResult.recentMints;
+  const recentMints = unifiedResult.recentMints as MintEventWithTimestamp[];
   const isLoading =
-    "isLoading" in unifiedResult ? unifiedResult.isLoading : false;
-  const error = "error" in unifiedResult ? unifiedResult.error : null;
+    "isLoading" in unifiedResult ? (unifiedResult.isLoading as boolean) : false;
+  const error = "error" in unifiedResult ? (unifiedResult.error as string | null) : null;
 
   const { data: mintPrice } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -50,7 +57,7 @@ export const RecentMints = () => {
       )}
 
       {/* Show Error Message if any */}
-      {error && (
+      {error && typeof error === "string" && (
         <div className="mb-3 p-3 bg-red-900/30 border border-red-500/30 rounded-lg text-sm text-red-400">
           ⚠️ {error}. Using 10-block range limit (Free Tier).
         </div>

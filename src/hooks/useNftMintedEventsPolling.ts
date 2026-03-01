@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { usePublicClient } from "wagmi";
-import { parseAbiItem } from "viem";
+import { parseAbiItem, type Hex } from "viem";
 
 interface UsePollingEventsProps {
   contractAddress: `0x${string}`;
@@ -8,12 +8,35 @@ interface UsePollingEventsProps {
   maxRange?: number; // Max blocks per request (default: 10 for Alchemy free tier)
 }
 
+/**
+ * Mint event data structure
+ */
+interface MintEventData {
+  minter: Hex;
+  tokenId: bigint;
+  timestamp: number;
+  txHash: Hex;
+  blockNumber: bigint;
+}
+
+/**
+ * Typed log entry for NFTMinted events
+ */
+interface NftMintedLog {
+  args: {
+    minter?: Hex;
+    tokenId?: bigint;
+  };
+  transactionHash: Hex;
+  blockNumber: bigint;
+}
+
 export const useNftMintedEventsPolling = ({
   contractAddress,
   pollInterval = 15000,
   maxRange = 10, // Critical: Limits for Alchemy Free Tier
 }: UsePollingEventsProps) => {
-  const [recentMints, setRecentMints] = useState<Array<any>>([]);
+  const [recentMints, setRecentMints] = useState<MintEventData[]>([]);
   const [lastBlock, setLastBlock] = useState<bigint | undefined>();
   const publicClient = usePublicClient();
   const [isLoading, setIsLoading] = useState(false);
@@ -22,58 +45,66 @@ export const useNftMintedEventsPolling = ({
   /**
    * Fetch events from a specific block range safely
    */
-  const fetchEventsInRange = async (fromBlock: bigint, toBlock: bigint) => {
-    if (!publicClient) return [];
+  const fetchEventsInRange = useCallback(
+    async (fromBlock: bigint, toBlock: bigint) => {
+      if (!publicClient) return [];
 
-    try {
-      const logs = await publicClient.getLogs({
-        address: contractAddress,
-        event: parseAbiItem(
-          "event NFTMinted(address indexed minter, uint256 indexed tokenId)",
-        ),
-        args: {},
-        fromBlock,
-        toBlock,
-      });
+      try {
+        const logs = (await publicClient.getLogs({
+          address: contractAddress,
+          event: parseAbiItem(
+            "event NFTMinted(address indexed minter, uint256 indexed tokenId)",
+          ),
+          args: {},
+          fromBlock,
+          toBlock,
+        })) as NftMintedLog[];
 
-      return logs;
-    } catch (err) {
-      console.error("[Polling Range Error]:", err);
-      throw err;
-    }
-  };
+        return logs;
+      } catch (err) {
+        console.error("[Polling Range Error]:", err);
+        throw err;
+      }
+    },
+    [publicClient, contractAddress],
+  );
+
+  /**
+   * Process mint logs and update state
+   */
+  const processMint = useCallback((logs: NftMintedLog[]) => {
+    if (logs.length === 0) return;
+
+    const newMints: MintEventData[] = logs
+      .filter((log) => log.args.minter && log.args.tokenId !== undefined)
+      .map((log) => ({
+        minter: log.args.minter as Hex,
+        tokenId: log.args.tokenId as bigint,
+        timestamp: Date.now(),
+        txHash: log.transactionHash as Hex,
+        blockNumber: log.blockNumber as bigint,
+      }));
+
+    // Update state with deduplication and limit to last 10
+    setRecentMints((prev) => {
+      // Add new mints to front
+      const combined = [...newMints, ...prev];
+
+      // Remove duplicates based on token ID (since we're tracking by ID)
+      const uniqueMints = Array.from(
+        new Map(
+          combined.map((item) => [item.tokenId.toString(), item]),
+        ).values(),
+      );
+
+      // Keep only last 10
+      return uniqueMints.slice(0, 10);
+    });
+  }, []);
 
   useEffect(() => {
     let mounted = true;
     let timeoutId: NodeJS.Timeout;
-
-    const processMint = (logs: any[]) => {
-      if (logs.length === 0) return;
-
-      const newMints = logs.map((log) => ({
-        minter: log.args.minter,
-        tokenId: log.args.tokenId,
-        timestamp: Date.now(),
-        txHash: log.transactionHash,
-        blockNumber: log.blockNumber,
-      }));
-
-      // Update state with deduplication and limit to last 10
-      setRecentMints((prev) => {
-        // Add new mints to front
-        const combined = [...newMints, ...prev];
-
-        // Remove duplicates based on token ID (since we're tracking by ID)
-        const uniqueMints = Array.from(
-          new Map(
-            combined.map((item) => [item.tokenId.toString(), item]),
-          ).values(),
-        );
-
-        // Keep only last 10
-        return uniqueMints.slice(0, 10);
-      });
-    };
 
     const fetchEvents = async () => {
       if (!mounted || !publicClient) return;
@@ -92,7 +123,7 @@ export const useNftMintedEventsPolling = ({
         const blocksToCheck = Number(currentBlock) - Number(previousBlock);
 
         let processedBlocks = 0n;
-        const accumulatedLogs: any[] = [];
+        const accumulatedLogs: NftMintedLog[] = [];
 
         // Split into chunks of maxRange (e.g., 10 blocks)
         while (processedBlocks < BigInt(blocksToCheck)) {
@@ -143,7 +174,15 @@ export const useNftMintedEventsPolling = ({
       mounted = false;
       if (timeoutId) clearInterval(timeoutId);
     };
-  }, [contractAddress, pollInterval, publicClient, lastBlock, maxRange]);
+  }, [
+    contractAddress,
+    pollInterval,
+    publicClient,
+    lastBlock,
+    maxRange,
+    fetchEventsInRange,
+    processMint,
+  ]);
 
   return { recentMints, isLoading, error };
 };

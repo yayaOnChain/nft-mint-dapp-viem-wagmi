@@ -82,13 +82,15 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
 
   // Toast effects
   useEffect(() => {
-    if (isPending) {
+    // Show pending toast when transaction is submitted
+    if (isPending && !toastId) {
       const id = toast.transaction.pending();
       setToastId(id);
     }
 
-    if (isConfirmed && hash) {
-      toast.transaction.success(hash, toastId ?? null, chain?.id);
+    // Update toast to success when confirmed
+    if (isConfirmed && hash && toastId) {
+      toast.transaction.success(hash, toastId, chain?.id);
       toast.success("NFT Minted Successfully!");
 
       // Refetch all relevant data
@@ -100,15 +102,30 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
       onMintSuccess?.();
 
       setQuantity(1);
+      setToastId(null); // Reset toastId after successful transaction
     }
 
-    if (writeError) {
+    // Update toast to error if transaction fails
+    if (writeError && toastId) {
       const msg = writeError.message.includes("User rejected")
         ? "You rejected the transaction in your wallet"
         : writeError.message;
-      toast.transaction.error(msg, toastId ?? null);
+      toast.transaction.error(msg, toastId);
+      setToastId(null); // Reset toastId after error
     }
-  }, [isPending, isConfirmed, hash, writeError, refetchTotalMinted, chain?.id]);
+  }, [
+    isPending,
+    isConfirmed,
+    hash,
+    writeError,
+    refetchTotalMinted,
+    refetchUserBalance,
+    refetchEthBalance,
+    onMintSuccess,
+    toast,
+    toastId,
+    chain?.id,
+  ]);
 
   // Calculations
   const totalCost = mintPrice ? mintPrice * BigInt(quantity) : 0n;

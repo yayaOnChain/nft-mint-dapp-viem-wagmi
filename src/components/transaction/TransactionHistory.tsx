@@ -12,6 +12,7 @@ import {
   alchemyNetwork,
 } from "../../config/env";
 import { CHAIN_IDS, UI_CONFIG, ERROR_MESSAGES } from "../../lib/constants";
+import type { AlchemyTransferResponse, BlockResponse } from "../../types";
 
 interface TransactionHistoryProps {
   refreshKey?: number; // Optional prop to trigger re-fetching transactions
@@ -67,19 +68,15 @@ export const TransactionHistory = ({
       const defaultLimit = filter.limit || UI_CONFIG.pagination.defaultLimit;
 
       // Build request params - include pageKey if fetching next page
-      const params: any = {
+      const params = {
         fromBlock: "0x0",
         toAddress: address,
         contractAddresses: [contractAddress],
-        category: ["erc721"],
+        category: ["erc721"] as const,
         withMetadata: true,
         maxCount: `0x${defaultLimit.toString(16)}`,
+        ...(nextPageKey && { pageKey: nextPageKey }),
       };
-
-      // Add pageKey for pagination if available
-      if (nextPageKey) {
-        params.pageKey = nextPageKey;
-      }
 
       const response = await fetch(baseUrl, {
         method: "POST",
@@ -92,7 +89,7 @@ export const TransactionHistory = ({
         }),
       });
 
-      const data = await response.json();
+      const data: AlchemyTransferResponse = await response.json();
 
       if (data.error) {
         console.error("RPC Error:", data.error.message);
@@ -100,8 +97,8 @@ export const TransactionHistory = ({
       }
 
       const txHistory: TransactionHistoryItem[] = data.result.transfers.map(
-        (tx: any) => ({
-          tokenId: parseInt(tx.tokenId, 16), // tx.erc721TokenId || tx.tokenId,
+        (tx) => ({
+          tokenId: parseInt(tx.tokenId, 16).toString(),
           txHash: tx.hash as `0x${string}`,
           timestamp: tx.blockTimestamp
             ? new Date(tx.blockTimestamp).getTime()
@@ -115,7 +112,6 @@ export const TransactionHistory = ({
               : "transfer",
           from: tx.from as `0x${string}`,
           to: tx.to as `0x${string}`,
-          // blockNumber: BigInt(tx.blockNum),
         }),
       );
 
@@ -147,7 +143,7 @@ export const TransactionHistory = ({
       );
       if (txsWithMissingTimestamp.length > 0) {
         const timestamps = await Promise.all(
-          txsWithMissingTimestamp.map(async (tx: any) => {
+          txsWithMissingTimestamp.map(async (tx) => {
             const res = await fetch(baseUrl, {
               method: "POST",
               body: JSON.stringify({
@@ -157,10 +153,10 @@ export const TransactionHistory = ({
                 params: [tx.blockNum, false],
               }),
             });
-            const data = await res.json();
+            const blockData: BlockResponse = await res.json();
             return {
               txHash: tx.txHash,
-              timestamp: parseInt(data.result.timestamp, 16) * 1000,
+              timestamp: parseInt(blockData.result.timestamp, 16) * 1000,
             };
           }),
         );
