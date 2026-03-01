@@ -1,6 +1,7 @@
 import { useUserNFTHistory } from "../../hooks";
 import { NFTCardSkeleton } from "./../ui";
 import { NftCard } from "./NftCard";
+import { Button } from "../ui/Button";
 import { contractAddress } from "../../config/env";
 
 interface NftGalleryProps {
@@ -8,16 +9,17 @@ interface NftGalleryProps {
 }
 
 /**
- * Display user's owned NFTs in a gallery format
+ * Display user's owned NFTs in a gallery format with pagination
  */
 export const NftGallery = ({ refreshKey = 0 }: NftGalleryProps) => {
-  const { nfts, isLoading, error, totalCount } = useUserNFTHistory({
-    contractAddress,
-    refreshKey,
-  });
+  const { nfts, isLoading, error, totalCount, hasMore, loadMore } =
+    useUserNFTHistory({
+      contractAddress,
+      refreshKey,
+    });
 
   // Loading State
-  if (isLoading) {
+  if (isLoading && nfts.length === 0) {
     return (
       <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
         <div className="flex justify-between items-center mb-4">
@@ -66,7 +68,7 @@ export const NftGallery = ({ refreshKey = 0 }: NftGalleryProps) => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">My NFTs</h3>
         <span className="text-sm text-gray-400">
-          {totalCount} {totalCount === 1 ? "NFT" : "NFTs"} owned
+          {nfts.length} of {totalCount} {totalCount === 1 ? "NFT" : "NFTs"} owned
         </span>
       </div>
 
@@ -82,9 +84,25 @@ export const NftGallery = ({ refreshKey = 0 }: NftGalleryProps) => {
         ))}
       </div>
 
-      {totalCount > nfts.length && (
-        <div className="mt-4 text-center text-sm text-gray-400">
-          Showing {nfts.length} of {totalCount} NFTs
+      {/* Load More Button */}
+      {hasMore && (
+        <div className="mt-6 text-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadMore}
+            isLoading={isLoading}
+            disabled={isLoading}
+          >
+            Load More ({nfts.length} / {totalCount})
+          </Button>
+        </div>
+      )}
+
+      {/* Show all loaded message */}
+      {!hasMore && nfts.length > 0 && (
+        <div className="mt-4 text-center text-sm text-gray-500">
+          All {totalCount} {totalCount === 1 ? "NFT" : "NFTs"} loaded
         </div>
       )}
     </div>

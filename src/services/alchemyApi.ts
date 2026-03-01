@@ -14,6 +14,7 @@ interface GetNFTsParams {
   owner: string;
   contractAddress?: string;
   pageSize?: number;
+  pageKey?: string;
 }
 
 interface GetAssetTransfersParams {
@@ -42,8 +43,9 @@ export class AlchemyApi {
   async getNFTs(params: GetNFTsParams): Promise<{
     nfts: UserNFT[];
     totalCount: number;
+    pageKey?: string;
   }> {
-    const { owner, contractAddress, pageSize = 100 } = params;
+    const { owner, contractAddress, pageSize = 100, pageKey } = params;
 
     const url = new URL(`${this.baseUrl}/nft/v2/${this.apiKey}/getNFTs`);
     url.searchParams.set("owner", owner);
@@ -53,13 +55,17 @@ export class AlchemyApi {
       url.searchParams.set("contractAddresses[]", contractAddress);
     }
 
+    if (pageKey) {
+      url.searchParams.set("pageKey", pageKey);
+    }
+
     const response = await fetch(url.toString());
 
     if (!response.ok) {
       throw new Error(`Alchemy API error: ${response.status}`);
     }
 
-    const data: AlchemyNFTResponse = await response.json();
+    const data: AlchemyNFTResponse & { pageKey?: string } = await response.json();
 
     const nfts: UserNFT[] = data.ownedNfts.map((nft) => ({
       tokenId: nft.id.tokenId,
@@ -71,6 +77,7 @@ export class AlchemyApi {
     return {
       nfts,
       totalCount: data.totalCount,
+      pageKey: data.pageKey,
     };
   }
 
