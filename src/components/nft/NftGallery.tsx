@@ -63,7 +63,7 @@ export const NftGallery = ({ refreshKey = 0 }: NftGalleryProps) => {
   }
 
   return (
-    <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
+    <div className="p-6 bg-gray-800 rounded-lg border border-gray-700">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">My NFTs</h3>
         <span className="text-sm text-gray-400">
