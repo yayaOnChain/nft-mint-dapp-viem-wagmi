@@ -1,10 +1,5 @@
 import type { TransactionHistoryItem } from "../../types";
-import {
-  getExplorerTxUrl,
-  getExplorerAddressUrl,
-  EXPLORER_URLS,
-  CHAIN_IDS,
-} from "../../lib/constants";
+import { getExplorerTxUrl, getExplorerAddressUrl } from "../../lib/constants";
 
 interface TransactionRowProps {
   transaction: TransactionHistoryItem;

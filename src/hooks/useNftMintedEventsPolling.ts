@@ -92,7 +92,7 @@ export const useNftMintedEventsPolling = ({
         const blocksToCheck = Number(currentBlock) - Number(previousBlock);
 
         let processedBlocks = 0n;
-        let accumulatedLogs: any[] = [];
+        const accumulatedLogs: any[] = [];
 
         // Split into chunks of maxRange (e.g., 10 blocks)
         while (processedBlocks < BigInt(blocksToCheck)) {

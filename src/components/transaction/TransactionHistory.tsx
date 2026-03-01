@@ -9,7 +9,7 @@ import type {
   TransactionFilter,
   TransactionPagination,
 } from "../../types";
-import { Skeleton, TransactionRowSkeleton } from "../ui";
+import { TransactionRowSkeleton } from "../ui";
 import {
   contractAddress,
   alchemyApiKey,

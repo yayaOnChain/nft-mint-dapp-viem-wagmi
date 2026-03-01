@@ -104,7 +104,7 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
 
     if (writeError) {
       const msg = writeError.message.includes("User rejected")
-        ? "Transaction rejected"
+        ? "You rejected the transaction in your wallet"
         : writeError.message;
       toast.transaction.error(msg, toastId ?? null);
     }
@@ -112,8 +112,7 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
 
   // Calculations
   const totalCost = mintPrice ? mintPrice * BigInt(quantity) : 0n;
-  const remainingSupply =
-    maxSupply && totalMinted ? Number(maxSupply - totalMinted) : 0;
+
   const progressPercent =
     maxSupply && totalMinted
       ? Math.round((Number(totalMinted) / Number(maxSupply)) * 100)
