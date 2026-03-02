@@ -176,11 +176,11 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
   if (isInitialLoading) {
     return (
       <div className="p-6 bg-gray-800 rounded-lg border border-gray-700 max-w-md mx-auto">
-        <Skeleton variant="text" className="w-1/2 h-8 mb-6" />
-        <Skeleton variant="rect" className="w-full h-2 mb-6" />
-        <Skeleton variant="rect" className="w-full h-12 mb-4" />
-        <Skeleton variant="rect" className="w-full h-12 mb-4" />
-        <Skeleton variant="rect" className="w-full h-12" />
+        <Skeleton variant="text" className="w-1/2 h-8 mb-6" data-testid="skeleton" />
+        <Skeleton variant="rect" className="w-full h-2 mb-6" data-testid="skeleton" />
+        <Skeleton variant="rect" className="w-full h-12 mb-4" data-testid="skeleton" />
+        <Skeleton variant="rect" className="w-full h-12 mb-4" data-testid="skeleton" />
+        <Skeleton variant="rect" className="w-full h-12" data-testid="skeleton" />
       </div>
     );
   }

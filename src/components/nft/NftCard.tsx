@@ -36,9 +36,12 @@ export const NftCard = ({ nft }: { nft: UserNFT }) => {
     fetchMetadata();
   }, [nft.tokenUri, imageError]);
 
+  // Determine if we should show the placeholder emoji
+  const showPlaceholder = !nft.tokenUri || imageError;
+
   // Fallback image if metadata fails
   const displayImage =
-    metadata?.image || (imageError ? "/placeholder-nft.png" : nft.tokenUri);
+    metadata?.image || (!showPlaceholder ? nft.tokenUri : null);
 
   // Format token ID with leading zeros (optional, for display consistency)
   const formatTokenId = (tokenId: string): string => {
@@ -49,7 +52,7 @@ export const NftCard = ({ nft }: { nft: UserNFT }) => {
     <div className="group relative bg-gray-700 rounded-lg overflow-hidden hover:ring-2 hover:ring-purple-500 transition-all">
       {/* NFT Image */}
       <div className="aspect-square bg-gray-600 relative">
-        {displayImage ? (
+        {displayImage && !showPlaceholder ? (
           <img
             src={displayImage}
             alt={`NFT #${nft.tokenId}`}

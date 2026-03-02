@@ -6,9 +6,10 @@ import { cn } from "../../lib/utils";
 interface SkeletonProps {
   className?: string;
   variant?: "text" | "circle" | "rect" | "card";
+  "data-testid"?: string;
 }
 
-export const Skeleton = ({ className, variant = "rect" }: SkeletonProps) => {
+export const Skeleton = ({ className, variant = "rect", "data-testid": dataTestId }: SkeletonProps) => {
   const baseStyles = "animate-pulse bg-gray-700";
 
   const variantStyles = {
@@ -18,7 +19,7 @@ export const Skeleton = ({ className, variant = "rect" }: SkeletonProps) => {
     card: "rounded-xl",
   };
 
-  return <div className={cn(baseStyles, variantStyles[variant], className)} />;
+  return <div data-testid={dataTestId} className={cn(baseStyles, variantStyles[variant], className)} />;
 };
 
 /**
@@ -26,7 +27,7 @@ export const Skeleton = ({ className, variant = "rect" }: SkeletonProps) => {
  */
 export const NFTCardSkeleton = () => {
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+    <div data-testid="nft-card-skeleton" className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
       {/* Image placeholder */}
       <Skeleton variant="rect" className="aspect-square w-full" />
 
@@ -66,7 +67,7 @@ export const TransactionRowSkeleton = () => {
  */
 export const MintFormSkeleton = () => {
   return (
-    <div className="p-6 bg-gray-800 rounded-lg border border-gray-700 max-w-md mx-auto space-y-4">
+    <div data-testid="mint-form-skeleton" className="p-6 bg-gray-800 rounded-lg border border-gray-700 max-w-md mx-auto space-y-4">
       <Skeleton variant="text" className="w-1/2 h-8" />
       <Skeleton variant="rect" className="w-full h-2" />
       <Skeleton variant="rect" className="w-full h-12" />
