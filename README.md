@@ -10,6 +10,14 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 ---
 
+## 📸 App Preview
+
+![MyProjectNFT DApp Preview](assets/screenshots/app-preview.png)
+
+*The complete NFT minting interface with real-time gallery and transaction history*
+
+---
+
 ## ✨ Features
 
 ### Core Functionality
