@@ -12,6 +12,9 @@ function App() {
   const { isConnected } = useAccount();
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const githubUrl = APP_CONFIG.repository;
+  const twitterUrl = APP_CONFIG.twitter;
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
@@ -202,16 +205,22 @@ function App() {
             © {new Date().getFullYear()} {APP_CONFIG.name}. Built on Ethereum.
           </p>
           <p className="mt-2">
-            <a href="#" className="hover:text-purple-400 transition-colors">
-              Documentation
-            </a>
-            {" • "}
-            <a href="#" className="hover:text-purple-400 transition-colors">
+            <a
+              href={githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-purple-400 transition-colors"
+            >
               GitHub
             </a>
             {" • "}
-            <a href="#" className="hover:text-purple-400 transition-colors">
-              Discord
+            <a
+              href={twitterUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-purple-400 transition-colors"
+            >
+              X
             </a>
           </p>
         </div>
