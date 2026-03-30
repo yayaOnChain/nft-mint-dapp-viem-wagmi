@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { AppProviders } from "../AppProviders";
+import { AppProviders } from "@/providers/AppProviders";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 
 // Mock the env module to provide test environment variables
-vi.mock("../../config/env", () => ({
+vi.mock("@/config/env", () => ({
   env: {
     walletConnectProjectId: "test-project-id",
     contractAddress: "0x1234567890123456789012345678901234567890",

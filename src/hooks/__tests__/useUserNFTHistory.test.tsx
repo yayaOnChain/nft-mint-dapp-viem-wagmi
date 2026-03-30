@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { useUserNFTHistory } from '../useUserNFTHistory';
+import { useUserNFTHistory } from '@/hooks/useUserNFTHistory';
 import * as wagmi from 'wagmi';
 import {
   AlchemyApi,
   setAlchemyApiInstance,
   resetAlchemyApiInstance,
-} from '../../services/alchemyApi';
+} from '@/services/alchemyApi';
 import { createConfig, http } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

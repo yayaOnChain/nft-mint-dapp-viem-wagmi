@@ -5,7 +5,7 @@ import {
   NFTCardSkeleton,
   TransactionRowSkeleton,
   MintFormSkeleton,
-} from "../Skeleton";
+} from "@/components/ui/Skeleton";
 
 describe("Skeleton", () => {
   describe("rendering", () => {

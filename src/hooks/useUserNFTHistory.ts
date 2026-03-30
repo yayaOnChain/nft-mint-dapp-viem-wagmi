@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount } from "wagmi";
-import type { UserNFT } from "../types/nft";
-import { getAlchemyApi } from "../services/alchemyApi";
+import type { UserNFT } from "@/types/nft";
+import { getAlchemyApi } from "@/services/alchemyApi";
 
 const INITIAL_PAGE_SIZE = 10;
 const LOAD_MORE_PAGE_SIZE = 10;

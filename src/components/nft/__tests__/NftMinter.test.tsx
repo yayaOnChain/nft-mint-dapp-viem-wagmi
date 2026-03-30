@@ -5,10 +5,10 @@ import { createConfig, http, WagmiProvider } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { parseEther } from "viem";
 import * as wagmi from "wagmi";
-import { NftMinter } from "../NftMinter";
+import { NftMinter } from "@/components/nft/NftMinter";
 
 // Mock the toast hook
-vi.mock("../../../hooks/useToast", () => ({
+vi.mock("@/hooks/useToast", () => ({
   useToast: () => ({
     success: vi.fn(),
     error: vi.fn(),

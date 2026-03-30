@@ -1,4 +1,4 @@
-import type { UserNFT, TransactionHistoryItem } from '../types';
+import type { UserNFT, TransactionHistoryItem } from '@/types';
 
 export const mockUserNFTs: UserNFT[] = [
   {

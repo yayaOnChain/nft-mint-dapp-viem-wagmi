@@ -4,7 +4,7 @@ import {
   getContractService,
   setContractServiceInstance,
   resetContractServiceInstance,
-} from '../contractService';
+} from '@/services/contractService';
 import { createConfig, http } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
 

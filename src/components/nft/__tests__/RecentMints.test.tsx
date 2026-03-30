@@ -5,10 +5,10 @@ import { createConfig, http, WagmiProvider } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { parseEther } from "viem";
 import * as wagmi from "wagmi";
-import { RecentMints } from "../RecentMints";
+import { RecentMints } from "@/components/nft/RecentMints";
 
 // Mock the unified hook at the hooks index level
-vi.mock("../../../hooks", () => ({
+vi.mock("@/hooks", () => ({
   useToast: vi.fn(),
   useUserNFTHistory: vi.fn(),
   useNftMintedEvents: vi.fn(),
@@ -17,12 +17,12 @@ vi.mock("../../../hooks", () => ({
 }));
 
 // Mock contract address
-vi.mock("../../../config/env", () => ({
+vi.mock("@/config/env", () => ({
   contractAddress: "0x1234567890123456789012345678901234567890",
 }));
 
 // Import the mocked hook
-import { useNftMintedEventsUnified } from "../../../hooks";
+import { useNftMintedEventsUnified } from "@/hooks";
 
 // Create test providers
 const createTestWrapper = () => {

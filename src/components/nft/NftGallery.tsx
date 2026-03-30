@@ -1,8 +1,8 @@
-import { useUserNFTHistory } from "../../hooks";
-import { NFTCardSkeleton } from "./../ui";
-import { NftCard } from "./NftCard";
-import { Button } from "../ui/Button";
-import { contractAddress } from "../../config/env";
+import { useUserNFTHistory } from "@/hooks";
+import { NFTCardSkeleton } from "@/components/ui";
+import { NftCard } from "@/components/nft/NftCard";
+import { Button } from "@/components/ui/Button";
+import { contractAddress } from "@/config/env";
 
 interface NftGalleryProps {
   refreshKey?: number; // Optional prop to trigger re-fetching NFTs

@@ -3,7 +3,7 @@ import type {
   AlchemyTransferResponse,
   BlockResponse,
   UserNFT,
-} from "../types";
+} from "@/types";
 
 interface AlchemyConfig {
   apiKey: string;

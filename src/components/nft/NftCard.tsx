@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { UserNFT } from "../../types";
+import type { UserNFT } from "@/types";
 
 /**
  * Display a single NFT card with image, name, token ID, and contract address.

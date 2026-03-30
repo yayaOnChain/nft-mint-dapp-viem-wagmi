@@ -12,7 +12,7 @@ import {
   getExplorerTxUrl,
   getExplorerAddressUrl,
   getExplorerTokenUrl,
-} from '../constants';
+} from '@/lib/constants';
 
 describe('APP_CONFIG', () => {
   it('should have required properties', () => {

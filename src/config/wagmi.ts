@@ -1,7 +1,7 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { http, webSocket } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
-import { walletConnectProjectId, useWebSocket, alchemyWsUrl } from "./env";
+import { walletConnectProjectId, useWebSocket, alchemyWsUrl } from "@/config/env";
 
 /**
  * Wagmi configuration with WebSocket support for real-time events

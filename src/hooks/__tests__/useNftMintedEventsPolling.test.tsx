@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { useNftMintedEventsPolling } from "../useNftMintedEventsPolling";
+import { useNftMintedEventsPolling } from "@/hooks/useNftMintedEventsPolling";
 import * as wagmi from "wagmi";
 import { createConfig, http } from "wagmi";
 import { sepolia } from "wagmi/chains";

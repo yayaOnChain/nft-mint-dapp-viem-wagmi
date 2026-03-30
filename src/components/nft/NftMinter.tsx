@@ -7,8 +7,8 @@ import {
   useBalance,
 } from "wagmi";
 import { formatEther } from "viem";
-import { myNftAbi } from "../../abi/myNft";
-import { useToast } from "../../hooks";
+import { myNftAbi } from "@/abi/myNft";
+import { useToast } from "@/hooks";
 import {
   Button,
   Card,
@@ -16,8 +16,8 @@ import {
   CardTitle,
   CardContent,
   Skeleton,
-} from "../ui";
-import { contractAddress } from "../../config/env";
+} from "@/components/ui";
+import { contractAddress } from "@/config/env";
 
 interface NftMinterProps {
   onMintSuccess?: () => void; // Optional callback to trigger after successful mint

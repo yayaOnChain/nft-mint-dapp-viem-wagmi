@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useNftMintedEventsUnified } from "../useNftMintedEventsUnified";
+import { useNftMintedEventsUnified } from "@/hooks/useNftMintedEventsUnified";
 import { createConfig, http } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

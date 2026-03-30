@@ -1,4 +1,4 @@
-import { myNftAbi } from "../abi/myNft";
+import { myNftAbi } from "@/abi/myNft";
 
 /**
  * Application-wide constants

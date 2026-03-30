@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
-import { NftMinter } from "./components/nft/NftMinter";
-import { NftGallery } from "./components/nft/NftGallery";
-import { RecentMints } from "./components/nft/RecentMints";
-import { TransactionHistory } from "./components/transaction/TransactionHistory";
-import { APP_CONFIG } from "./lib/constants";
+import { NftMinter } from "@/components/nft/NftMinter";
+import { NftGallery } from "@/components/nft/NftGallery";
+import { RecentMints } from "@/components/nft/RecentMints";
+import { TransactionHistory } from "@/components/transaction/TransactionHistory";
+import { APP_CONFIG } from "@/lib/constants";
 
 function App() {
   const { isConnected } = useAccount();

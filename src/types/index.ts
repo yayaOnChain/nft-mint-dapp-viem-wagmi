@@ -1,5 +1,5 @@
-export * from "./nft";
-export * from "./transaction";
+export * from "@/types/nft";
+export * from "@/types/transaction";
 
 // Global app types
 export interface ApiResponse<T> {

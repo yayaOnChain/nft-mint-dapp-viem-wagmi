@@ -1,6 +1,6 @@
-import { useNftMintedEvents } from "./useNftMintedEvents"; // WebSocket version
-import { useNftMintedEventsPolling } from "./useNftMintedEventsPolling"; // Polling version
-import type { NFTMintedEvent } from "./useNftMintedEvents";
+import { useNftMintedEvents } from "@/hooks/useNftMintedEvents"; // WebSocket version
+import { useNftMintedEventsPolling } from "@/hooks/useNftMintedEventsPolling"; // Polling version
+import type { NFTMintedEvent } from "@/hooks/useNftMintedEvents";
 
 interface UseNftMintedEventsUnifiedProps {
   contractAddress: `0x${string}`;

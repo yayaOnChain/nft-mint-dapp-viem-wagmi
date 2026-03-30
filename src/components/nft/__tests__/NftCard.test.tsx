@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { NftCard } from "../NftCard";
-import type { UserNFT } from "../../../types";
+import { NftCard } from "@/components/nft/NftCard";
+import type { UserNFT } from "@/types";
 
 describe("NftCard", () => {
   const mockNFT: UserNFT = {

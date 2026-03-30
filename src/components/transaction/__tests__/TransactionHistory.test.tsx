@@ -4,10 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import * as wagmi from "wagmi";
-import { TransactionHistory } from "../TransactionHistory";
+import { TransactionHistory } from "@/components/transaction/TransactionHistory";
 
 // Mock the toast hook
-vi.mock("../../../hooks/useToast", () => ({
+vi.mock("@/hooks/useToast", () => ({
   useToast: () => ({
     success: vi.fn(),
     error: vi.fn(),

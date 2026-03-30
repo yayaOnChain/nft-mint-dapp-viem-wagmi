@@ -1,9 +1,9 @@
 import { formatEther } from "viem";
 import { useReadContract } from "wagmi";
-import { myNftAbi } from "../../abi/myNft";
-import { useNftMintedEventsUnified } from "../../hooks";
-import type { NFTMintedEvent } from "../../hooks/useNftMintedEvents";
-import { contractAddress } from "../../config/env";
+import { myNftAbi } from "@/abi/myNft";
+import { useNftMintedEventsUnified } from "@/hooks";
+import type { NFTMintedEvent } from "@/hooks/useNftMintedEvents";
+import { contractAddress } from "@/config/env";
 
 interface MintEventWithTimestamp extends NFTMintedEvent {
   timestamp: number;

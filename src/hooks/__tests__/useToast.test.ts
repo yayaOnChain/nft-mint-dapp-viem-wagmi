@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useToast } from "../useToast";
+import { useToast } from "@/hooks/useToast";
 
 // Mock sonner toast - must be before any variable that uses the mocks
 vi.mock("sonner", () => {
@@ -20,6 +20,7 @@ let toast: typeof import("sonner").toast;
 let mockToastSuccess: ReturnType<typeof vi.fn>;
 let mockToastError: ReturnType<typeof vi.fn>;
 let mockToastLoading: ReturnType<typeof vi.fn>;
+let mockToastInfo: ReturnType<typeof vi.fn>;
 
 describe("useToast", () => {
   beforeEach(async () => {

@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { TransactionRow } from "../TransactionRow";
-import type { TransactionHistoryItem } from "../../../types";
+import { TransactionRow } from "@/components/transaction/TransactionRow";
+import type { TransactionHistoryItem } from "@/types";
 
 // Mock the constants module
-vi.mock("../../../lib/constants", () => ({
+vi.mock("@/lib/constants", () => ({
   getExplorerTxUrl: vi.fn(
     (txHash: string, chainId: number) =>
       `https://explorer.com/tx/${txHash}?chain=${chainId}`,

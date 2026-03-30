@@ -1,5 +1,5 @@
 import { useWatchContractEvent } from "wagmi";
-import { myNftAbi } from "../abi/myNft";
+import { myNftAbi } from "@/abi/myNft";
 import { useState, useEffect } from "react";
 
 // Define TypeScript interface for the NFTMinted event parameters

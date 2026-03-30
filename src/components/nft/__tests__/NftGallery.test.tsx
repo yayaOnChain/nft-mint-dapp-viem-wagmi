@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { mockUserNFTs } from '../../../test/mockData';
+import { mockUserNFTs } from '@/test/mockData';
 
 // Generate consistent mock NFTs
 const generateMockNFTs = (count: number) => {

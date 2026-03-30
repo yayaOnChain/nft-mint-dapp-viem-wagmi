@@ -4,14 +4,14 @@ import {
   getAlchemyApi,
   setAlchemyApiInstance,
   resetAlchemyApiInstance,
-} from '../../services/alchemyApi';
+} from '@/services/alchemyApi';
 import {
   mockUserNFTs,
   mockTransactions,
   mockAlchemyNFTResponse,
   mockAlchemyTransferResponse,
   mockBlockResponse,
-} from '../../test/mockData';
+} from '@/test/mockData';
 
 describe('AlchemyApi', () => {
   let alchemyApi: AlchemyApi;

@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
-import { useToast } from "../../hooks";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui";
-import { Button } from "../ui/Button";
-import { TransactionRow } from "./TransactionRow";
-import type { TransactionHistoryItem, TransactionFilter } from "../../types";
-import { TransactionRowSkeleton } from "../ui";
-import { contractAddress } from "../../config/env";
-import { CHAIN_IDS, UI_CONFIG, ERROR_MESSAGES } from "../../lib/constants";
-import { getAlchemyApi } from "../../services/alchemyApi";
+import { useToast } from "@/hooks";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
+import { TransactionRow } from "@/components/transaction/TransactionRow";
+import type { TransactionHistoryItem, TransactionFilter } from "@/types";
+import { TransactionRowSkeleton } from "@/components/ui";
+import { contractAddress } from "@/config/env";
+import { CHAIN_IDS, UI_CONFIG, ERROR_MESSAGES } from "@/lib/constants";
+import { getAlchemyApi } from "@/services/alchemyApi";
 
 interface TransactionHistoryProps {
   refreshKey?: number; // Optional prop to trigger re-fetching transactions

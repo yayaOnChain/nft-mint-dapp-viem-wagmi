@@ -3,11 +3,11 @@ export {
   getAlchemyApi,
   setAlchemyApiInstance,
   resetAlchemyApiInstance,
-} from "./alchemyApi";
+} from "@/services/alchemyApi";
 
 export {
   ContractService,
   getContractService,
   setContractServiceInstance,
   resetContractServiceInstance,
-} from "./contractService";
+} from "@/services/contractService";
