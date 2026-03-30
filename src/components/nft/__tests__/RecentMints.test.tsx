@@ -5,6 +5,7 @@ import { createConfig, http, WagmiProvider } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { parseEther } from "viem";
 import * as wagmi from "wagmi";
+import type { UseReadContractReturnType } from "wagmi";
 import { RecentMints } from "@/components/nft/RecentMints";
 
 // Mock the unified hook at the hooks index level
@@ -86,14 +87,14 @@ describe("RecentMints", () => {
       recentMints: [],
       isLoading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
     // Mock useReadContract
     useReadContractSpy = vi.spyOn(wagmi, "useReadContract").mockImplementation(
-      (config: any) =>
+      (config?: { functionName?: string }) =>
         ({
           data:
-            config.functionName === "MINT_PRICE"
+            config?.functionName === "MINT_PRICE"
               ? parseEther("0.01")
               : undefined,
           error: null,
@@ -114,8 +115,8 @@ describe("RecentMints", () => {
           isFetching: false,
           isStale: false,
           refetch: vi.fn(),
-          queryKey: [config.functionName],
-        }) as any,
+          queryKey: [config?.functionName],
+        }) as unknown as UseReadContractReturnType,
     );
   });
 
@@ -130,7 +131,7 @@ describe("RecentMints", () => {
         recentMints: [],
         isLoading: true,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -142,7 +143,7 @@ describe("RecentMints", () => {
         recentMints: [],
         isLoading: true,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       const { container } = render(<RecentMints />, { wrapper });
 
@@ -155,7 +156,7 @@ describe("RecentMints", () => {
         recentMints: [],
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       const { container } = render(<RecentMints />, { wrapper });
 
@@ -170,7 +171,7 @@ describe("RecentMints", () => {
         recentMints: [],
         isLoading: false,
         error: "Network error",
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -182,7 +183,7 @@ describe("RecentMints", () => {
         recentMints: [],
         isLoading: false,
         error: "RPC Error",
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -196,7 +197,7 @@ describe("RecentMints", () => {
         recentMints: [],
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -210,7 +211,7 @@ describe("RecentMints", () => {
         recentMints: [],
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -224,7 +225,7 @@ describe("RecentMints", () => {
         recentMints: [],
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -238,7 +239,7 @@ describe("RecentMints", () => {
         recentMints: mockRecentMints,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -251,7 +252,7 @@ describe("RecentMints", () => {
         recentMints: mockRecentMints,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -268,7 +269,7 @@ describe("RecentMints", () => {
         recentMints: mockRecentMints,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -291,7 +292,7 @@ describe("RecentMints", () => {
         recentMints: recentMint30sAgo,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -313,7 +314,7 @@ describe("RecentMints", () => {
         recentMints: recentMint2mAgo,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -335,7 +336,7 @@ describe("RecentMints", () => {
         recentMints: recentMint2hAgo,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -347,7 +348,7 @@ describe("RecentMints", () => {
         recentMints: mockRecentMints,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -359,7 +360,7 @@ describe("RecentMints", () => {
         recentMints: mockRecentMints,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -383,7 +384,7 @@ describe("RecentMints", () => {
         recentMints: mockRecentMints,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       const { container } = render(<RecentMints />, { wrapper });
 
@@ -401,7 +402,7 @@ describe("RecentMints", () => {
         recentMints: mockRecentMints,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       render(<RecentMints />, { wrapper });
 
@@ -431,7 +432,7 @@ describe("RecentMints", () => {
           recentMints: mockRecentMints,
           isLoading: false,
           error: null,
-        } as any;
+        } as unknown as ReturnType<typeof useNftMintedEventsUnified>;
       });
 
       render(<RecentMints />, { wrapper });
@@ -449,7 +450,7 @@ describe("RecentMints", () => {
         recentMints: [],
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       const { container } = render(<RecentMints />, { wrapper });
 
@@ -465,7 +466,7 @@ describe("RecentMints", () => {
         recentMints: mockRecentMints,
         isLoading: false,
         error: null,
-      } as any);
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
 
       const { container } = render(<RecentMints />, { wrapper });
 
