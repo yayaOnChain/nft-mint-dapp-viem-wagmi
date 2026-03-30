@@ -5,6 +5,14 @@ import { createConfig, http, WagmiProvider } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { parseEther } from "viem";
 import * as wagmi from "wagmi";
+import type {
+  UseAccountReturnType,
+  UseReadContractReturnType,
+  UseWriteContractReturnType,
+  UseWaitForTransactionReceiptReturnType,
+  UseBalanceReturnType,
+} from "wagmi";
+import type { Connector } from "@wagmi/core";
 import { NftMinter } from "@/components/nft/NftMinter";
 
 // Mock the toast hook
@@ -76,18 +84,18 @@ describe("NftMinter", () => {
       status: "connected",
       chain: sepolia,
       chainId: sepolia.id,
-      connector: undefined as any,
-    });
+      connector: undefined as unknown as Connector,
+    } as UseAccountReturnType);
 
     // Mock useReadContract
     useReadContractSpy = vi.spyOn(wagmi, "useReadContract").mockImplementation(
-      (config: any) =>
+      (_config?: { functionName?: string }) =>
         ({
           data: (() => {
-            if (config.functionName === "totalMinted") return 5n;
-            if (config.functionName === "MAX_SUPPLY") return 1000n;
-            if (config.functionName === "MINT_PRICE") return parseEther("0.01");
-            if (config.functionName === "balanceOf") return 2n;
+            if (_config?.functionName === "totalMinted") return 5n;
+            if (_config?.functionName === "MAX_SUPPLY") return 1000n;
+            if (_config?.functionName === "MINT_PRICE") return parseEther("0.01");
+            if (_config?.functionName === "balanceOf") return 2n;
             return undefined;
           })(),
           error: null,
@@ -108,8 +116,8 @@ describe("NftMinter", () => {
           isFetching: false,
           isStale: false,
           refetch: vi.fn(),
-          queryKey: [config.functionName],
-        }) as any,
+          queryKey: [_config?.functionName ?? "unknown"],
+        }) as unknown as UseReadContractReturnType,
     );
 
     // Mock useWriteContract
@@ -127,7 +135,9 @@ describe("NftMinter", () => {
       reset: vi.fn(),
       submittedAt: 0,
       variables: undefined,
-    } as any);
+      context: undefined,
+      isPaused: false,
+    } as unknown as UseWriteContractReturnType);
 
     // Mock useWaitForTransactionReceipt
     useWaitForTransactionReceiptSpy = vi
@@ -153,7 +163,13 @@ describe("NftMinter", () => {
         isStale: false,
         refetch: vi.fn(),
         queryKey: ["waitForTransactionReceipt"],
-      } as any);
+        errorUpdateCount: 0,
+        isInitialLoading: false,
+        isPaused: false,
+        isRefetching: false,
+        isPreviousData: false,
+        isNextPlaceholderData: false,
+      } as unknown as UseWaitForTransactionReceiptReturnType);
 
     // Mock useBalance
     useBalanceSpy = vi.spyOn(wagmi, "useBalance").mockReturnValue({
@@ -182,7 +198,13 @@ describe("NftMinter", () => {
       isStale: false,
       refetch: vi.fn(),
       queryKey: ["getBalance"],
-    } as any);
+      errorUpdateCount: 0,
+      isInitialLoading: false,
+      isPaused: false,
+      isRefetching: false,
+      isPreviousData: false,
+      isNextPlaceholderData: false,
+    } as unknown as UseBalanceReturnType);
   });
 
   afterEach(() => {
@@ -200,7 +222,7 @@ describe("NftMinter", () => {
         address: undefined,
         isConnected: false,
         chain: undefined,
-      });
+      } as Partial<UseAccountReturnType>);
 
       render(<NftMinter />, { wrapper });
 
@@ -212,25 +234,14 @@ describe("NftMinter", () => {
 
   describe("loading state", () => {
     it("should show skeletons when loading data", () => {
-      useReadContractSpy.mockImplementation((config: any) => {
-        if (config.functionName === "totalMinted") {
-          return {
+      useReadContractSpy.mockImplementation(
+        () =>
+          ({
             data: undefined,
             refetch: vi.fn(),
             isLoading: true,
-          };
-        }
-        if (config.functionName === "MAX_SUPPLY") {
-          return { data: undefined };
-        }
-        if (config.functionName === "MINT_PRICE") {
-          return { data: undefined };
-        }
-        if (config.functionName === "balanceOf") {
-          return { data: undefined, refetch: vi.fn() };
-        }
-        return { data: undefined };
-      });
+          }) as unknown as UseReadContractReturnType,
+      );
 
       render(<NftMinter />, { wrapper });
 
@@ -363,7 +374,7 @@ describe("NftMinter", () => {
         writeContract: vi.fn(),
         isPending: true,
         error: undefined,
-      });
+      } as Partial<UseWriteContractReturnType>);
 
       render(<NftMinter />, { wrapper });
 
@@ -376,7 +387,7 @@ describe("NftMinter", () => {
       useWaitForTransactionReceiptSpy.mockReturnValue({
         isLoading: true,
         isSuccess: false,
-      });
+      } as Partial<UseWaitForTransactionReceiptReturnType>);
 
       render(<NftMinter />, { wrapper });
 
@@ -394,7 +405,7 @@ describe("NftMinter", () => {
         writeContract: mockWriteContract,
         isPending: false,
         error: undefined,
-      });
+      } as Partial<UseWriteContractReturnType>);
 
       render(<NftMinter />, { wrapper });
 
@@ -415,42 +426,42 @@ describe("NftMinter", () => {
 
       // Mock refetch functions
       const mockRefetchTotalMinted = vi.fn();
-      const mockRefetchUserBalance = vi.fn();
       const mockRefetchEthBalance = vi.fn();
 
       // Track transaction state
-      let currentHash: string | undefined = undefined;
+      let currentHash: `0x${string}` | undefined = undefined;
       let isConfirmed = false;
 
       // Mock useWriteContract - hash gets set when writeContract is called
       const mockWriteContract = vi.fn(() => {
-        currentHash = mockHash;
+        currentHash = mockHash as `0x${string}`;
       });
       useWriteContractSpy.mockReturnValue({
         data: currentHash,
         writeContract: mockWriteContract,
         isPending: true, // Start as pending to trigger toastId set
         error: undefined,
-      } as any);
+        reset: vi.fn(),
+        submittedAt: 0,
+        variables: undefined,
+        context: undefined,
+        isPaused: false,
+      } as unknown as UseWriteContractReturnType);
 
       // Mock useWaitForTransactionReceipt - starts pending, then confirmed
       useWaitForTransactionReceiptSpy.mockImplementation(() => ({
-        data: isConfirmed ? { transactionHash: mockHash, blockNumber: 123456n } : undefined,
+        data: isConfirmed
+          ? { transactionHash: mockHash as `0x${string}`, blockNumber: 123456n }
+          : undefined,
         isLoading: !isConfirmed,
         isSuccess: isConfirmed,
-      } as any));
+      } as Partial<UseWaitForTransactionReceiptReturnType>));
 
       // Mock useReadContract to return refetch functions
       useReadContractSpy.mockImplementation(
-        (config: any) =>
+        () =>
           ({
-            data: (() => {
-              if (config.functionName === "totalMinted") return 5n;
-              if (config.functionName === "MAX_SUPPLY") return 1000n;
-              if (config.functionName === "MINT_PRICE") return parseEther("0.01");
-              if (config.functionName === "balanceOf") return 2n;
-              return undefined;
-            })(),
+            data: 5n,
             error: null,
             status: "success" as const,
             isError: false,
@@ -468,14 +479,9 @@ describe("NftMinter", () => {
             isFetchedAfterMount: true,
             isFetching: false,
             isStale: false,
-            refetch:
-              config.functionName === "totalMinted"
-                ? mockRefetchTotalMinted
-                : config.functionName === "balanceOf"
-                  ? mockRefetchUserBalance
-                  : vi.fn(),
-            queryKey: [config.functionName],
-          }) as any,
+            refetch: mockRefetchTotalMinted,
+            queryKey: ["totalMinted"],
+          }) as unknown as UseReadContractReturnType,
       );
 
       // Mock useBalance to return refetch function
@@ -505,20 +511,34 @@ describe("NftMinter", () => {
         isStale: false,
         refetch: mockRefetchEthBalance,
         queryKey: ["getBalance"],
-      } as any);
+        errorUpdateCount: 0,
+        isInitialLoading: false,
+        isPaused: false,
+        isRefetching: false,
+        isPreviousData: false,
+        isNextPlaceholderData: false,
+      } as unknown as UseBalanceReturnType);
 
-      const { rerender } = render(<NftMinter onMintSuccess={mockOnMintSuccess} />, { wrapper });
+      const { rerender } = render(
+        <NftMinter onMintSuccess={mockOnMintSuccess} />,
+        { wrapper },
+      );
 
       // Simulate transaction confirmation
       isConfirmed = true;
 
       // Update mocks for confirmed state
       useWriteContractSpy.mockReturnValue({
-        data: mockHash,
+        data: mockHash as `0x${string}`,
         writeContract: mockWriteContract,
         isPending: false,
         error: undefined,
-      } as any);
+        reset: vi.fn(),
+        submittedAt: 0,
+        variables: undefined,
+        context: undefined,
+        isPaused: false,
+      } as unknown as UseWriteContractReturnType);
 
       // Rerender to trigger the state change
       rerender(<NftMinter onMintSuccess={mockOnMintSuccess} />);
@@ -535,21 +555,20 @@ describe("NftMinter", () => {
 
   describe("progress calculation", () => {
     it("should calculate correct progress percentage", () => {
-      useReadContractSpy.mockImplementation((config: any) => {
-        if (config.functionName === "totalMinted") {
-          return { data: 500n, refetch: vi.fn(), isLoading: false };
-        }
-        if (config.functionName === "MAX_SUPPLY") {
-          return { data: 1000n };
-        }
-        if (config.functionName === "MINT_PRICE") {
-          return { data: parseEther("0.01") };
-        }
-        if (config.functionName === "balanceOf") {
-          return { data: 2n, refetch: vi.fn() };
-        }
-        return { data: undefined };
-      });
+      useReadContractSpy.mockImplementation(
+        (config: { functionName?: string }) =>
+          ({
+            data: (() => {
+              if (config?.functionName === "totalMinted") return 500n;
+              if (config?.functionName === "MAX_SUPPLY") return 1000n;
+              if (config?.functionName === "MINT_PRICE") return parseEther("0.01");
+              if (config?.functionName === "balanceOf") return 2n;
+              return undefined;
+            })(),
+            refetch: vi.fn(),
+            isLoading: false,
+          }) as unknown as UseReadContractReturnType,
+      );
 
       render(<NftMinter />, { wrapper });
 
