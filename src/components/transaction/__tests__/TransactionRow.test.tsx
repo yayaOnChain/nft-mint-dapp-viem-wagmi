@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { TransactionRow } from "@/components/transaction/TransactionRow";
-import type { TransactionHistoryItem } from "@/types";
+import type { TransactionHistoryItem, TransactionAction } from "@/types";
 
 // Mock the constants module
 vi.mock("@/lib/constants", () => ({
@@ -255,7 +255,7 @@ describe("TransactionRow", () => {
     it("should apply gray styles for unknown action", () => {
       const unknownTransaction = {
         ...mockTransaction,
-        action: "unknown" as any,
+        action: "unknown" as TransactionAction,
       };
 
       const { container } = render(

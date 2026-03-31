@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import * as wagmi from "wagmi";
+import type { Connector, UseAccountReturnType } from "wagmi";
+import type { AlchemyApi } from "@/services/alchemyApi";
 import { TransactionHistory } from "@/components/transaction/TransactionHistory";
 
 // Mock the toast hook
@@ -35,6 +37,12 @@ vi.mock("../../../config/env", () => ({
 // Import mocked services
 import { getAlchemyApi } from "../../../services/alchemyApi";
 // import { useToast } from "../../../hooks/useToast";
+
+// Type for mock Alchemy API
+interface MockAlchemyApi {
+  getAssetTransfers: ReturnType<typeof vi.fn>;
+  getBlockByNumber: ReturnType<typeof vi.fn>;
+}
 
 // Create test providers
 const createTestWrapper = () => {
@@ -90,7 +98,7 @@ describe("TransactionHistory", () => {
     },
   ];
 
-  const mockAlchemyApi = {
+  const mockAlchemyApi: MockAlchemyApi = {
     getAssetTransfers: vi.fn(),
     getBlockByNumber: vi.fn(),
   };
@@ -109,11 +117,11 @@ describe("TransactionHistory", () => {
       status: "connected",
       chain: sepolia,
       chainId: sepolia.id,
-      connector: undefined as any,
+      connector: undefined as unknown as Connector,
     });
 
     // Setup Alchemy API mock
-    vi.mocked(getAlchemyApi).mockReturnValue(mockAlchemyApi as any);
+    vi.mocked(getAlchemyApi).mockReturnValue(mockAlchemyApi as unknown as AlchemyApi);
     mockAlchemyApi.getAssetTransfers.mockResolvedValue({
       transfers: mockTransfers,
       pageKey: undefined,
@@ -134,7 +142,7 @@ describe("TransactionHistory", () => {
         address: undefined,
         isConnected: false,
         chain: undefined,
-      } as any);
+      } as unknown as UseAccountReturnType);
 
       render(<TransactionHistory />, { wrapper });
 
@@ -431,7 +439,7 @@ describe("TransactionHistory", () => {
         address: undefined,
         isConnected: false,
         chain: undefined,
-      } as any);
+      } as unknown as UseAccountReturnType);
 
       rerender(<TransactionHistory />);
 
