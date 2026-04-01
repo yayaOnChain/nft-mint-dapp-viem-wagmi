@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useNftMintedEventsPolling } from "@/hooks/useNftMintedEventsPolling";
 import * as wagmi from "wagmi";
-import { createConfig, http } from "wagmi";
+import { createConfig, http, usePublicClient } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
@@ -34,8 +34,22 @@ const createTestWrapper = () => {
   );
 };
 
+// Mock PublicClient type
+type MockPublicClient = {
+  getBlockNumber: ReturnType<typeof vi.fn>;
+  getLogs: ReturnType<typeof vi.fn>;
+};
+
+const createMockPublicClient = (
+  getBlockNumberImpl: ReturnType<typeof vi.fn>,
+  getLogsImpl: ReturnType<typeof vi.fn>,
+): MockPublicClient => ({
+  getBlockNumber: getBlockNumberImpl,
+  getLogs: getLogsImpl,
+});
+
 describe("useNftMintedEventsPolling", () => {
-  const mockContractAddress = "0x1234567890123456789012345678901234567890";
+  const mockContractAddress = "0x1234567890123456789012345678901234567890" as `0x${string}`;
   const wrapper = createTestWrapper();
 
   beforeEach(() => {
@@ -49,11 +63,13 @@ describe("useNftMintedEventsPolling", () => {
   describe("initialization", () => {
     it("should initialize with empty recentMints array", async () => {
       let blockNumber = 1000n;
-      const mockPublicClient = {
-        getBlockNumber: vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
-        getLogs: vi.fn().mockResolvedValue([]),
-      };
-      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(mockPublicClient as any);
+      const mockPublicClient = createMockPublicClient(
+        vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
+        vi.fn().mockResolvedValue([]),
+      );
+      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(
+        mockPublicClient as unknown as ReturnType<typeof usePublicClient>,
+      );
 
       const { result } = renderHook(
         () => useNftMintedEventsPolling({ contractAddress: mockContractAddress }),
@@ -71,10 +87,12 @@ describe("useNftMintedEventsPolling", () => {
 
     it("should call usePublicClient", () => {
       const usePublicClientSpy = vi.spyOn(wagmi, "usePublicClient");
-      usePublicClientSpy.mockReturnValue({
-        getBlockNumber: vi.fn().mockResolvedValue(1000n),
-        getLogs: vi.fn().mockResolvedValue([]),
-      } as any);
+      usePublicClientSpy.mockReturnValue(
+        createMockPublicClient(
+          vi.fn().mockResolvedValue(1000n),
+          vi.fn().mockResolvedValue([]),
+        ) as unknown as ReturnType<typeof usePublicClient>,
+      );
 
       renderHook(
         () => useNftMintedEventsPolling({ contractAddress: mockContractAddress }),
@@ -99,12 +117,14 @@ describe("useNftMintedEventsPolling", () => {
         },
       ];
 
-      const mockPublicClient = {
-        getBlockNumber: vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
-        getLogs: vi.fn().mockResolvedValue(mockLogs),
-      };
+      const mockPublicClient = createMockPublicClient(
+        vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
+        vi.fn().mockResolvedValue(mockLogs),
+      );
 
-      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(mockPublicClient as any);
+      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(
+        mockPublicClient as unknown as ReturnType<typeof usePublicClient>,
+      );
 
       const { result } = renderHook(
         () => useNftMintedEventsPolling({ contractAddress: mockContractAddress }),
@@ -144,12 +164,14 @@ describe("useNftMintedEventsPolling", () => {
         },
       ];
 
-      const mockPublicClient = {
-        getBlockNumber: vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
-        getLogs: vi.fn().mockResolvedValue(mockLogs),
-      };
+      const mockPublicClient = createMockPublicClient(
+        vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
+        vi.fn().mockResolvedValue(mockLogs),
+      );
 
-      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(mockPublicClient as any);
+      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(
+        mockPublicClient as unknown as ReturnType<typeof usePublicClient>,
+      );
 
       const { result } = renderHook(
         () => useNftMintedEventsPolling({ contractAddress: mockContractAddress }),
@@ -168,12 +190,14 @@ describe("useNftMintedEventsPolling", () => {
 
     it("should handle empty NFT list", async () => {
       let blockNumber = 1000n;
-      const mockPublicClient = {
-        getBlockNumber: vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
-        getLogs: vi.fn().mockResolvedValue([]),
-      };
+      const mockPublicClient = createMockPublicClient(
+        vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
+        vi.fn().mockResolvedValue([]),
+      );
 
-      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(mockPublicClient as any);
+      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(
+        mockPublicClient as unknown as ReturnType<typeof usePublicClient>,
+      );
 
       const { result } = renderHook(
         () => useNftMintedEventsPolling({ contractAddress: mockContractAddress }),
@@ -193,12 +217,14 @@ describe("useNftMintedEventsPolling", () => {
 
   describe("error handling", () => {
     it("should set error state when getBlockNumber fails", async () => {
-      const mockPublicClient = {
-        getBlockNumber: vi.fn().mockRejectedValue(new Error("Network error")),
-        getLogs: vi.fn(),
-      };
+      const mockPublicClient = createMockPublicClient(
+        vi.fn().mockRejectedValue(new Error("Network error")),
+        vi.fn(),
+      );
 
-      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(mockPublicClient as any);
+      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(
+        mockPublicClient as unknown as ReturnType<typeof usePublicClient>,
+      );
 
       const { result } = renderHook(
         () => useNftMintedEventsPolling({ contractAddress: mockContractAddress }),
@@ -215,12 +241,14 @@ describe("useNftMintedEventsPolling", () => {
 
     it("should set error state when getLogs fails", async () => {
       let blockNumber = 1000n;
-      const mockPublicClient = {
-        getBlockNumber: vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
-        getLogs: vi.fn().mockRejectedValue(new Error("Logs fetch error")),
-      };
+      const mockPublicClient = createMockPublicClient(
+        vi.fn().mockImplementation(() => Promise.resolve(blockNumber++)),
+        vi.fn().mockRejectedValue(new Error("Logs fetch error")),
+      );
 
-      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(mockPublicClient as any);
+      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(
+        mockPublicClient as unknown as ReturnType<typeof usePublicClient>,
+      );
 
       const { result } = renderHook(
         () => useNftMintedEventsPolling({ contractAddress: mockContractAddress }),
@@ -236,7 +264,7 @@ describe("useNftMintedEventsPolling", () => {
     });
 
     it("should handle error when publicClient is not available", async () => {
-      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(null as any);
+      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(null as unknown as ReturnType<typeof usePublicClient>);
 
       const { result } = renderHook(
         () => useNftMintedEventsPolling({ contractAddress: mockContractAddress }),
@@ -261,12 +289,11 @@ describe("useNftMintedEventsPolling", () => {
       const getBlockNumberSpy = vi.fn().mockImplementation(() => Promise.resolve(blockNumber++));
       const getLogsSpy = vi.fn().mockResolvedValue([]);
 
-      const mockPublicClient = {
-        getBlockNumber: getBlockNumberSpy,
-        getLogs: getLogsSpy,
-      };
+      const mockPublicClient = createMockPublicClient(getBlockNumberSpy, getLogsSpy);
 
-      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(mockPublicClient as any);
+      vi.spyOn(wagmi, "usePublicClient").mockReturnValue(
+        mockPublicClient as unknown as ReturnType<typeof usePublicClient>,
+      );
 
       const { unmount } = renderHook(
         () =>

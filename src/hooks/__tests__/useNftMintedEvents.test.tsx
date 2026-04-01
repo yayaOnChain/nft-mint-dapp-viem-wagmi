@@ -32,6 +32,16 @@ const createTestWrapper = () => {
   );
 };
 
+// Type for the mock log that matches what the hook processes
+type MockLog = {
+  args: {
+    minter?: `0x${string}`;
+    tokenId?: bigint;
+  };
+  transactionHash: `0x${string}`;
+  blockNumber: bigint;
+};
+
 describe("useNftMintedEvents", () => {
   const mockContractAddress =
     "0x1234567890123456789012345678901234567890" as `0x${string}`;
@@ -75,21 +85,22 @@ describe("useNftMintedEvents", () => {
 
   describe("event handling", () => {
     it("should add new mint to recentMints when event is triggered", async () => {
-      let onLogsCallback: (logs: any[]) => void;
+      let onLogsCallback: (logs: MockLog[]) => void;
 
-      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation(
-        (params: any) => {
-          onLogsCallback = params.onLogs;
-          return vi.fn();
-        },
-      );
+      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation((...args) => {
+        const params = args[0];
+        if (params && typeof params === "object" && "onLogs" in params) {
+          onLogsCallback = params.onLogs as unknown as (logs: MockLog[]) => void;
+        }
+        return vi.fn();
+      });
 
       const { result } = renderHook(
         () => useNftMintedEvents({ contractAddress: mockContractAddress }),
         { wrapper },
       );
 
-      const mockLogs = [
+      const mockLogs: MockLog[] = [
         {
           args: {
             minter:
@@ -121,14 +132,15 @@ describe("useNftMintedEvents", () => {
     });
 
     it("should keep only last 10 mints", async () => {
-      let onLogsCallback: (logs: any[]) => void;
+      let onLogsCallback: (logs: MockLog[]) => void;
 
-      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation(
-        (params: any) => {
-          onLogsCallback = params.onLogs;
-          return vi.fn();
-        },
-      );
+      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation((...args) => {
+        const params = args[0];
+        if (params && typeof params === "object" && "onLogs" in params) {
+          onLogsCallback = params.onLogs as unknown as (logs: MockLog[]) => void;
+        }
+        return vi.fn();
+      });
 
       const { result } = renderHook(
         () => useNftMintedEvents({ contractAddress: mockContractAddress }),
@@ -162,14 +174,15 @@ describe("useNftMintedEvents", () => {
 
     it("should call onNewMint callback when provided", async () => {
       const onNewMintMock = vi.fn();
-      let onLogsCallback: (logs: any[]) => void;
+      let onLogsCallback: (logs: MockLog[]) => void;
 
-      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation(
-        (params: any) => {
-          onLogsCallback = params.onLogs;
-          return vi.fn();
-        },
-      );
+      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation((...args) => {
+        const params = args[0];
+        if (params && typeof params === "object" && "onLogs" in params) {
+          onLogsCallback = params.onLogs as unknown as (logs: MockLog[]) => void;
+        }
+        return vi.fn();
+      });
 
       renderHook(
         () =>
@@ -180,7 +193,7 @@ describe("useNftMintedEvents", () => {
         { wrapper },
       );
 
-      const mockLogs = [
+      const mockLogs: MockLog[] = [
         {
           args: {
             minter:
@@ -212,21 +225,22 @@ describe("useNftMintedEvents", () => {
     });
 
     it("should handle multiple logs in single event", async () => {
-      let onLogsCallback: (logs: any[]) => void;
+      let onLogsCallback: (logs: MockLog[]) => void;
 
-      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation(
-        (params: any) => {
-          onLogsCallback = params.onLogs;
-          return vi.fn();
-        },
-      );
+      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation((...args) => {
+        const params = args[0];
+        if (params && typeof params === "object" && "onLogs" in params) {
+          onLogsCallback = params.onLogs as unknown as (logs: MockLog[]) => void;
+        }
+        return vi.fn();
+      });
 
       const { result } = renderHook(
         () => useNftMintedEvents({ contractAddress: mockContractAddress }),
         { wrapper },
       );
 
-      const mockLogs = [
+      const mockLogs: MockLog[] = [
         {
           args: {
             minter: "0xMinter1" as `0x${string}`,
@@ -267,21 +281,22 @@ describe("useNftMintedEvents", () => {
     });
 
     it("should ignore logs with missing minter or tokenId", async () => {
-      let onLogsCallback: (logs: any[]) => void;
+      let onLogsCallback: (logs: MockLog[]) => void;
 
-      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation(
-        (params: any) => {
-          onLogsCallback = params.onLogs;
-          return vi.fn();
-        },
-      );
+      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation((...args) => {
+        const params = args[0];
+        if (params && typeof params === "object" && "onLogs" in params) {
+          onLogsCallback = params.onLogs as unknown as (logs: MockLog[]) => void;
+        }
+        return vi.fn();
+      });
 
       const { result } = renderHook(
         () => useNftMintedEvents({ contractAddress: mockContractAddress }),
         { wrapper },
       );
 
-      const mockLogs = [
+      const mockLogs: MockLog[] = [
         {
           args: {
             minter: undefined,
@@ -327,12 +342,13 @@ describe("useNftMintedEvents", () => {
         .mockImplementation(() => {});
       let onErrorCallback: (error: Error) => void;
 
-      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation(
-        (params: any) => {
-          onErrorCallback = params.onError;
-          return vi.fn();
-        },
-      );
+      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation((...args) => {
+        const params = args[0];
+        if (params && typeof params === "object" && "onError" in params) {
+          onErrorCallback = params.onError as unknown as (error: Error) => void;
+        }
+        return vi.fn();
+      });
 
       renderHook(
         () => useNftMintedEvents({ contractAddress: mockContractAddress }),
@@ -354,14 +370,15 @@ describe("useNftMintedEvents", () => {
 
   describe("cleanup", () => {
     it("should clear recentMints when contractAddress changes", async () => {
-      let onLogsCallback: (logs: any[]) => void;
+      let onLogsCallback: (logs: MockLog[]) => void;
 
-      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation(
-        (params: any) => {
-          onLogsCallback = params.onLogs;
-          return vi.fn();
-        },
-      );
+      vi.spyOn(wagmi, "useWatchContractEvent").mockImplementation((...args) => {
+        const params = args[0];
+        if (params && typeof params === "object" && "onLogs" in params) {
+          onLogsCallback = params.onLogs as unknown as (logs: MockLog[]) => void;
+        }
+        return vi.fn();
+      });
 
       const { result, rerender } = renderHook(
         ({ address }) => useNftMintedEvents({ contractAddress: address }),
