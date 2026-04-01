@@ -7,15 +7,15 @@ import { TestProviders } from "./TestProviders";
 interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
   queryClient?: QueryClient;
 }
-    
-     const customRender = (
-       ui: ReactElement,
-       { ...renderOptions }: CustomRenderOptions = {},
-     ) => {
-       return render(ui, {
-         wrapper: ({ children }) => <TestProviders>{children}</TestProviders>,
-         ...renderOptions,
-       });
-     };
-     
-     export { customRender as render };
+
+const customRender = (
+  ui: ReactElement,
+  { ...renderOptions }: CustomRenderOptions = {},
+) => {
+  return render(ui, {
+    wrapper: ({ children }) => <TestProviders>{children}</TestProviders>,
+    ...renderOptions,
+  });
+};
+
+export { customRender as render };
