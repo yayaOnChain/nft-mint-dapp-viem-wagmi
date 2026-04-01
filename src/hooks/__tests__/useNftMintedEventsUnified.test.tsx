@@ -6,18 +6,23 @@ import { sepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import type { PropsWithChildren } from "react";
+import type { NFTMintedEvent } from "@/hooks/useNftMintedEvents";
 
 // Mock the dependent hooks
-vi.mock("../useNftMintedEvents", () => ({
+vi.mock("@/hooks/useNftMintedEvents", () => ({
   useNftMintedEvents: vi.fn(),
 }));
 
-vi.mock("../useNftMintedEventsPolling", () => ({
+vi.mock("@/hooks/useNftMintedEventsPolling", () => ({
   useNftMintedEventsPolling: vi.fn(),
 }));
 
-import { useNftMintedEvents } from "../useNftMintedEvents";
-import { useNftMintedEventsPolling } from "../useNftMintedEventsPolling";
+import { useNftMintedEvents } from "@/hooks/useNftMintedEvents";
+import { useNftMintedEventsPolling } from "@/hooks/useNftMintedEventsPolling";
+
+// Type definitions for mock return values
+type UseNftMintedEventsReturn = ReturnType<typeof useNftMintedEvents>;
+type UseNftMintedEventsPollingReturn = ReturnType<typeof useNftMintedEventsPolling>;
 
 // Create test providers
 const createTestWrapper = () => {
@@ -46,9 +51,9 @@ const createTestWrapper = () => {
 };
 
 describe("useNftMintedEventsUnified", () => {
-  const mockContractAddress = "0x1234567890123456789012345678901234567890";
+  const mockContractAddress = "0x1234567890123456789012345678901234567890" as `0x${string}`;
   const wrapper = createTestWrapper();
-  const mockOnNewMint = vi.fn();
+  const mockOnNewMint = vi.fn<(event: NFTMintedEvent & { blockNumber: bigint; txHash: `0x${string}` }) => void>();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -60,11 +65,11 @@ describe("useNftMintedEventsUnified", () => {
 
   describe("hooks invocation", () => {
     it("should call both useNftMintedEvents and useNftMintedEventsPolling", () => {
-      const mockWebSocketResult = { recentMints: [] };
-      const mockPollingResult = { recentMints: [], isLoading: false, error: null };
+      const mockWebSocketResult: UseNftMintedEventsReturn = { recentMints: [] };
+      const mockPollingResult: UseNftMintedEventsPollingReturn = { recentMints: [], isLoading: false, error: null };
 
-      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult as any);
-      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult as any);
+      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult);
+      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult);
 
       renderHook(
         () =>
@@ -88,11 +93,11 @@ describe("useNftMintedEventsUnified", () => {
     });
 
     it("should call both hooks on every render to maintain hook order", () => {
-      const mockWebSocketResult = { recentMints: [] };
-      const mockPollingResult = { recentMints: [], isLoading: false, error: null };
+      const mockWebSocketResult: UseNftMintedEventsReturn = { recentMints: [] };
+      const mockPollingResult: UseNftMintedEventsPollingReturn = { recentMints: [], isLoading: false, error: null };
 
-      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult as any);
-      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult as any);
+      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult);
+      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult);
 
       const { rerender } = renderHook(
         () =>
@@ -116,15 +121,15 @@ describe("useNftMintedEventsUnified", () => {
 
   describe("return values", () => {
     it("should return polling result (default mode)", () => {
-      const mockWebSocketResult = { recentMints: [] };
-      const mockPollingResult = {
-        recentMints: [{ tokenId: 2n }],
+      const mockWebSocketResult: UseNftMintedEventsReturn = { recentMints: [] };
+      const mockPollingResult: UseNftMintedEventsPollingReturn = {
+        recentMints: [{ tokenId: 2n, minter: mockContractAddress, timestamp: Date.now(), txHash: "0x123" as `0x${string}`, blockNumber: 1n }],
         isLoading: true,
         error: null,
       };
 
-      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult as any);
-      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult as any);
+      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult);
+      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult);
 
       const { result } = renderHook(
         () =>
@@ -136,22 +141,22 @@ describe("useNftMintedEventsUnified", () => {
 
       // In default mode (no WebSocket), should return polling result
       expect(result.current).toEqual({
-        recentMints: [{ tokenId: 2n }],
+        recentMints: [{ tokenId: 2n, minter: mockContractAddress, timestamp: expect.any(Number), txHash: "0x123", blockNumber: 1n }],
         isLoading: true,
         error: null,
       });
     });
 
     it("should return polling result with all properties", () => {
-      const mockWebSocketResult = { recentMints: [] };
-      const mockPollingResult = {
-        recentMints: [{ tokenId: 1n }],
+      const mockWebSocketResult: UseNftMintedEventsReturn = { recentMints: [] };
+      const mockPollingResult: UseNftMintedEventsPollingReturn = {
+        recentMints: [{ tokenId: 1n, minter: mockContractAddress, timestamp: Date.now(), txHash: "0x123" as `0x${string}`, blockNumber: 1n }],
         isLoading: false,
         error: "Test error",
       };
 
-      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult as any);
-      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult as any);
+      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult);
+      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult);
 
       const { result } = renderHook(
         () =>
@@ -162,7 +167,7 @@ describe("useNftMintedEventsUnified", () => {
       );
 
       expect(result.current).toEqual({
-        recentMints: [{ tokenId: 1n }],
+        recentMints: [{ tokenId: 1n, minter: mockContractAddress, timestamp: expect.any(Number), txHash: "0x123", blockNumber: 1n }],
         isLoading: false,
         error: "Test error",
       });
@@ -171,11 +176,11 @@ describe("useNftMintedEventsUnified", () => {
 
   describe("parameter passing", () => {
     it("should pass contractAddress to both hooks", () => {
-      const mockWebSocketResult = { recentMints: [] };
-      const mockPollingResult = { recentMints: [], isLoading: false, error: null };
+      const mockWebSocketResult: UseNftMintedEventsReturn = { recentMints: [] };
+      const mockPollingResult: UseNftMintedEventsPollingReturn = { recentMints: [], isLoading: false, error: null };
 
-      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult as any);
-      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult as any);
+      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult);
+      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult);
 
       renderHook(
         () =>
@@ -198,11 +203,11 @@ describe("useNftMintedEventsUnified", () => {
     });
 
     it("should pass onNewMint to useNftMintedEvents", () => {
-      const mockWebSocketResult = { recentMints: [] };
-      const mockPollingResult = { recentMints: [], isLoading: false, error: null };
+      const mockWebSocketResult: UseNftMintedEventsReturn = { recentMints: [] };
+      const mockPollingResult: UseNftMintedEventsPollingReturn = { recentMints: [], isLoading: false, error: null };
 
-      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult as any);
-      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult as any);
+      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult);
+      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult);
 
       renderHook(
         () =>
@@ -221,11 +226,11 @@ describe("useNftMintedEventsUnified", () => {
     });
 
     it("should use default pollInterval of 60000 for polling hook", () => {
-      const mockWebSocketResult = { recentMints: [] };
-      const mockPollingResult = { recentMints: [], isLoading: false, error: null };
+      const mockWebSocketResult: UseNftMintedEventsReturn = { recentMints: [] };
+      const mockPollingResult: UseNftMintedEventsPollingReturn = { recentMints: [], isLoading: false, error: null };
 
-      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult as any);
-      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult as any);
+      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult);
+      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult);
 
       renderHook(
         () =>

@@ -7,7 +7,7 @@ import {
   setAlchemyApiInstance,
   resetAlchemyApiInstance,
 } from '@/services/alchemyApi';
-import { createConfig, http } from 'wagmi';
+import { createConfig, http, useAccount } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
@@ -60,7 +60,7 @@ describe('useUserNFTHistory', () => {
       address: '0xUserAddress123456789012345678901234567890' as `0x${string}`,
       isConnected: true,
       chain: sepolia,
-    } as any);
+    } as unknown as ReturnType<typeof useAccount>);
 
     mockAlchemyApi = new AlchemyApi({
       apiKey: 'test-key',

@@ -4,12 +4,18 @@ import { useToast } from "@/hooks/useToast";
 
 // Mock sonner toast - must be before any variable that uses the mocks
 vi.mock("sonner", () => {
-  const mockFn = vi.fn();
-  mockFn.success = vi.fn();
-  mockFn.error = vi.fn();
-  mockFn.loading = vi.fn();
-  mockFn.info = vi.fn();
-  mockFn.dismiss = vi.fn();
+  const mockSuccess = vi.fn();
+  const mockError = vi.fn();
+  const mockLoading = vi.fn();
+  const mockInfo = vi.fn();
+  const mockDismiss = vi.fn();
+  const mockFn = Object.assign(vi.fn(), {
+    success: mockSuccess,
+    error: mockError,
+    loading: mockLoading,
+    info: mockInfo,
+    dismiss: mockDismiss,
+  });
   return {
     toast: mockFn,
   };
@@ -20,18 +26,18 @@ let toast: typeof import("sonner").toast;
 let mockToastSuccess: ReturnType<typeof vi.fn>;
 let mockToastError: ReturnType<typeof vi.fn>;
 let mockToastLoading: ReturnType<typeof vi.fn>;
-let mockToastInfo: ReturnType<typeof vi.fn>;
+
 
 describe("useToast", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     // Get fresh references after clearing mocks
     const sonner = await import("sonner");
-    toast = sonner.toast;
-    mockToastSuccess = toast.success;
-    mockToastError = toast.error;
-    mockToastLoading = toast.loading;
-    mockToastInfo = toast.info;
+    toast = sonner.toast as unknown as typeof sonner.toast;
+    mockToastSuccess = toast.success as unknown as ReturnType<typeof vi.fn>;
+    mockToastError = toast.error as unknown as ReturnType<typeof vi.fn>;
+    mockToastLoading = toast.loading as unknown as ReturnType<typeof vi.fn>;
+
   });
 
   afterEach(() => {
@@ -140,7 +146,7 @@ describe("useToast", () => {
       mockToastLoading.mockReturnValue(mockToastId);
       const { result } = renderHook(() => useToast());
 
-      let toastId: number | undefined;
+      let toastId: string | number | undefined;
       act(() => {
         toastId = result.current.loading("Loading message");
       });
@@ -219,7 +225,7 @@ describe("useToast", () => {
         mockToastLoading.mockReturnValue(mockToastId);
         const { result } = renderHook(() => useToast());
 
-        let toastId: number | undefined;
+        let toastId: string | number | undefined;
         act(() => {
           toastId = result.current.transaction.pending();
         });
