@@ -23,6 +23,7 @@ export default defineConfig({
       '.git',
       '.cache',
       '**/*.d.ts',
+      'src/contracts/**',
     ],
     coverage: {
       provider: 'v8',
@@ -33,6 +34,7 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.config.*',
         '**/mockData/**',
+        'src/contracts/**',
       ],
     },
     css: false,
