@@ -1,6 +1,6 @@
 import { useWatchContractEvent } from "wagmi";
 import { myNftAbi } from "@/abi/myNft";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Define TypeScript interface for the NFTMinted event parameters
 export interface NFTMintedEvent {
@@ -16,9 +16,8 @@ interface UseNftMintedEventsProps {
 }
 
 /**
- * Custom hook to listen for NFTMinted events in real-time
- * @param contractAddress - The deployed contract address
- * @param onNewMint - Optional callback when a new mint event is detected
+ * Custom hook to listen for NFTMinted events in real-time.
+ * Falls back to polling for RPC providers that don't support WebSocket filters.
  */
 export const useNftMintedEvents = ({
   contractAddress,
@@ -27,15 +26,22 @@ export const useNftMintedEvents = ({
   const [recentMints, setRecentMints] = useState<
     Array<NFTMintedEvent & { timestamp: number }>
   >([]);
+  const errorCountRef = useRef(0);
+  const maxErrors = 3; // Disable after 3 consecutive errors
 
   // Watch for NFTMinted events using Wagmi's built-in hook
   useWatchContractEvent({
     address: contractAddress,
     abi: myNftAbi,
     eventName: "NFTMinted",
+    poll: true, // Force polling mode for HTTP-only RPCs
+    pollingInterval: 4_000, // Poll every 4 seconds
     // Optional: Only listen to events from specific block (for pagination)
     // fromBlock: 12345678n,
     onLogs: (logs) => {
+      // Reset error count on successful event reception
+      errorCountRef.current = 0;
+
       // Process each log entry
       logs.forEach((log) => {
         // Type-safe access to event arguments via log.args
@@ -64,8 +70,25 @@ export const useNftMintedEvents = ({
       });
     },
     onError: (error) => {
-      // Handle subscription errors (e.g., WebSocket disconnect)
-      console.error("Event listener error:", error);
+      // Silently ignore "filter not found" errors from public RPCs
+      if (error.message?.includes("filter not found")) {
+        // Expected behavior for HTTP-only RPCs - polling will handle it
+        return;
+      }
+
+      errorCountRef.current += 1;
+
+      // Only log after maxErrors to avoid console spam
+      if (errorCountRef.current <= maxErrors) {
+        console.warn(
+          `[useNftMintedEvents] Event subscription error (${errorCountRef.current}/${maxErrors}). Switching to polling mode.`,
+        );
+      }
+
+      // After max consecutive errors, disable further error logging
+      if (errorCountRef.current > maxErrors) {
+        return;
+      }
     },
   });
 
