@@ -21,7 +21,9 @@
     "test:components": "vitest run src/components",
     "test:hooks": "vitest run src/hooks",
     "test:services": "vitest run src/services",
-    "typechain": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" hardhat typechain"
+    "typechain": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" hardhat typechain",
+    "deploy:local": "npx hardhat run src/scripts/deploy.ts --network localhost",
+    "deploy:sepolia": "npx hardhat run src/scripts/deploy.ts --network sepolia"
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.10",
