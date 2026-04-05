@@ -1,12 +1,13 @@
 # NFT Mint DApp with Viem and Wagmi
 
-A modern, production-ready decentralized application (DApp) for minting NFTs on the Ethereum blockchain. Built with cutting-edge Web3 technologies including **Viem**, **Wagmi v2**, **RainbowKit**, and **React 19**.
+A modern, production-ready decentralized application (DApp) for minting NFTs on the Ethereum blockchain. Built with cutting-edge Web3 technologies including **Viem**, **Wagmi v2**, **RainbowKit**, and **React 19**, backed by a Solidity smart contract compiled with Hardhat.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![React](https://img.shields.io/badge/React-19.2.0-61dafb.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178c6.svg)
 ![Wagmi](https://img.shields.io/badge/Wagmi-2.19.5-f56e4a.svg)
 ![Viem](https://img.shields.io/badge/Viem-2.46.2-36759c.svg)
+![Solidity](https://img.shields.io/badge/Solidity-0.8.20-363636.svg)
 
 ---
 
@@ -14,7 +15,7 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 ![MyProjectNFT DApp Preview](assets/screenshots/app-preview.png)
 
-*The complete NFT minting interface with real-time gallery and transaction history*
+_The complete NFT minting interface with real-time gallery and transaction history_
 
 ---
 
@@ -23,16 +24,25 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 ### Core Functionality
 
 - 🔗 **Wallet Connection** - Seamless multi-wallet support via RainbowKit
-- 🎨 **NFT Minting** - Mint unique NFTs with customizable quantities (1-10 per transaction)
+- 🎨 **NFT Minting** - Mint unique NFTs with customizable quantities
 - 🖼️ **NFT Gallery** - View your personal NFT collection in real-time
 - 📜 **Transaction History** - Track all minting activities and transactions
 - 🔴 **Live Updates** - Real-time event polling for recent community mints
+
+### Smart Contract
+
+- 📝 **ERC-721 Compliant** - Standard NFT implementation using OpenZeppelin 4.9.6
+- 💰 **Mint Price Control** - Fixed mint price of 0.01 ETH
+- 📊 **Max Supply Limit** - Capped at 1,000 NFTs
+- 🔒 **Reentrancy Guard** - Protection against reentrancy attacks
+- 💸 **Owner Withdrawal** - Secure fund withdrawal for contract owner
+- 🧪 **Comprehensive Tests** - Full test coverage with Hardhat + Chai
 
 ### Technical Highlights
 
 - ⚡ **Real-time Events** - WebSocket support for instant transaction confirmations
 - 🎯 **Multi-Chain** - Support for Ethereum Mainnet and Sepolia testnet
-- 🧪 **Test Coverage** - Comprehensive unit tests with Vitest
+- 🧪 **Test Coverage** - Contract tests (Hardhat) + frontend tests (Vitest)
 - 🎨 **Modern UI** - Beautiful dark theme with Tailwind CSS v4
 - 📱 **Responsive Design** - Mobile-first, works on all devices
 - 🔐 **Type Safe** - Full TypeScript support with strict type checking
@@ -40,6 +50,8 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 ---
 
 ## 🛠️ Tech Stack
+
+### Frontend
 
 | Category               | Technology                     |
 | ---------------------- | ------------------------------ |
@@ -53,6 +65,16 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 | **Notifications**      | Sonner 2.0.7                   |
 | **Testing**            | Vitest 4.0.18, Testing Library |
 | **Linting**            | ESLint 9.20.0, Prettier 3.8.1  |
+
+### Smart Contract
+
+| Category            | Technology                   |
+| ------------------- | ---------------------------- |
+| **Framework**       | Hardhat 2.28.6               |
+| **Language**        | Solidity 0.8.20              |
+| **Library**         | OpenZeppelin Contracts 4.9.6 |
+| **Testing**         | Hardhat + Chai + Ethers v6   |
+| **Type Generation** | TypeChain (ethers-v6)        |
 
 ---
 
@@ -85,18 +107,35 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
    Create a `.env` file in the root directory:
 
    ```env
+   # Frontend
    VITE_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
    VITE_USE_WEBSOCKET=true
    VITE_ALCHEMY_WS_URL=wss://eth-sepolia.g.alchemy.com/v2/your_api_key
+
+   # Smart Contract (for Sepolia deployment)
+   PRIVATE_KEY=your_private_key_here
+   SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
    ```
 
-4. **Start development server**
+4. **Compile smart contracts**
+
+   ```bash
+   npm run compile
+   ```
+
+5. **Generate TypeChain types**
+
+   ```bash
+   npm run typechain
+   ```
+
+6. **Start development server**
 
    ```bash
    npm run dev
    ```
 
-5. **Open your browser**
+7. **Open your browser**
 
    Navigate to `http://localhost:5173`
 
@@ -104,55 +143,169 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 ## 📖 Available Scripts
 
-| Command                 | Description                   |
-| ----------------------- | ----------------------------- |
-| `npm run dev`           | Start development server      |
-| `npm run build`         | Build for production          |
-| `npm run lint`          | Run ESLint                    |
-| `npm run lint:fix`      | Auto-fix linting issues       |
-| `npm run format`        | Format code with Prettier     |
-| `npm run type-check`    | Run TypeScript type checking  |
-| `npm run test`          | Run all tests                 |
-| `npm run test:watch`    | Run tests in watch mode       |
-| `npm run test:ui`       | Run tests with UI             |
-| `npm run test:coverage` | Generate test coverage report |
-| `npm run predeploy`     | Full pre-deployment check     |
+### Frontend Scripts
+
+| Command                   | Description                   |
+| ------------------------- | ----------------------------- |
+| `npm run dev`             | Start development server      |
+| `npm run build`           | Build for production          |
+| `npm run lint`            | Run ESLint                    |
+| `npm run lint:fix`        | Auto-fix linting issues       |
+| `npm run format`          | Format code with Prettier     |
+| `npm run type-check`      | Run TypeScript type checking  |
+| `npm run test:frontend`   | Run frontend tests (Vitest)   |
+| `npm run test:watch`      | Run tests in watch mode       |
+| `npm run test:ui`         | Run tests with UI             |
+| `npm run test:coverage`   | Generate test coverage report |
+| `npm run test:components` | Run component tests           |
+| `npm run test:hooks`      | Run hook tests                |
+| `npm run test:services`   | Run service tests             |
+| `npm run predeploy`       | Full pre-deployment check     |
+
+### Smart Contract Scripts
+
+| Command                  | Description                  |
+| ------------------------ | ---------------------------- |
+| `npm run compile`        | Compile Solidity contracts   |
+| `npm run clean`          | Clean Hardhat artifacts      |
+| `npm run test:contract`  | Run contract tests (Hardhat) |
+| `npm run typechain`      | Generate TypeScript types    |
+| `npm run deploy:local`   | Deploy to local Hardhat node |
+| `npm run deploy:sepolia` | Deploy to Sepolia testnet    |
+
+### Full Test Suite
+
+```bash
+npm run test  # Runs both contract and frontend tests
+```
 
 ---
 
 ## 🏗️ Project Structure
 
 ```
-src/
-├── abi/                    # Smart contract ABIs
-├── assets/                 # Static assets (images, icons)
-├── components/             # React components
-│   ├── nft/               # NFT-related components
-│   │   ├── NftMinter.tsx  # Minting interface
-│   │   ├── NftGallery.tsx # User's NFT collection
-│   │   ├── NftCard.tsx    # Individual NFT display
-│   │   └── RecentMints.tsx# Live community mints
-│   ├── transaction/       # Transaction components
-│   │   └── TransactionHistory.tsx
-│   └── ui/                # Reusable UI components
-├── config/                 # App configuration
-│   └── wagmi.ts           # Wagmi setup
-├── hooks/                  # Custom React hooks
-│   ├── useNftMintedEvents.ts
-│   ├── useNftMintedEventsPolling.ts
-│   ├── useUserNFTHistory.ts
-│   └── useToast.ts
-├── lib/                    # Utilities and constants
-│   └── constants.ts       # App-wide configuration
-├── providers/              # Context providers
-│   └── AppProviders.tsx   # Centralized provider wrapper
-├── services/               # External service integrations
-├── test/                   # Test utilities
-├── types/                  # TypeScript type definitions
-├── App.tsx                 # Main application component
-├── main.tsx               # Entry point
-└── index.css              # Global styles
+├── src/
+│   ├── abi/                    # Smart contract ABIs
+│   ├── assets/                 # Static assets (images, icons)
+│   ├── components/             # React components
+│   │   ├── nft/               # NFT-related components
+│   │   │   ├── NftMinter.tsx  # Minting interface
+│   │   │   ├── NftGallery.tsx # User's NFT collection
+│   │   │   ├── NftCard.tsx    # Individual NFT display
+│   │   │   └── RecentMints.tsx# Live community mints
+│   │   ├── transaction/       # Transaction components
+│   │   │   └── TransactionHistory.tsx
+│   │   └── ui/                # Reusable UI components
+│   ├── config/                 # App configuration
+│   │   └── wagmi.ts           # Wagmi setup
+│   ├── contracts/             # Smart contract source files
+│   │   ├── MyNFT.sol          # ERC-721 NFT contract
+│   │   └── __tests__/         # Contract tests
+│   │       └── MyNFT.test.ts
+│   ├── hooks/                  # Custom React hooks
+│   │   ├── useNftMintedEvents.ts
+│   │   ├── useNftMintedEventsPolling.ts
+│   │   ├── useUserNFTHistory.ts
+│   │   └── useToast.ts
+│   ├── lib/                    # Utilities and constants
+│   │   └── constants.ts       # App-wide configuration
+│   ├── providers/              # Context providers
+│   │   └── AppProviders.tsx   # Centralized provider wrapper
+│   ├── scripts/                # Deployment scripts
+│   │   └── deploy.ts          # Multi-network deploy script
+│   ├── services/               # External service integrations
+│   ├── test/                   # Test utilities
+│   ├── types/                  # TypeScript type definitions
+│   ├── App.tsx                 # Main application component
+│   ├── main.tsx               # Entry point
+│   └── index.css              # Global styles
+├── hardhat.config.ts           # Hardhat configuration
+├── tsconfig.json               # Root TypeScript config
+├── tsconfig.app.json           # Frontend TypeScript config
+├── tsconfig.hardhat.json       # Hardhat TypeScript config
+├── vite.config.ts              # Vite configuration
+├── vitest.config.ts            # Vitest configuration
+├── contract-address-local.json # Local deployment address
+├── contract-address-sepolia.json # Sepolia deployment address
+└── .env                        # Environment variables
 ```
+
+---
+
+## 📝 Smart Contract
+
+### MyNFT Contract Details
+
+Located in `src/contracts/MyNFT.sol`:
+
+```solidity
+pragma solidity ^0.8.20;
+
+contract MyNFT is ERC721, Ownable, ReentrancyGuard {
+    uint256 public constant MAX_SUPPLY = 1000;
+    uint256 public constant MINT_PRICE = 0.01 ether;
+
+    function mint(uint256 quantity) external payable;
+    function withdraw() external onlyOwner;
+    function totalMinted() external view returns (uint256);
+}
+```
+
+### Key Features
+
+- **MAX_SUPPLY**: 1,000 NFTs (hard cap)
+- **MINT_PRICE**: 0.01 ETH per NFT
+- **ReentrancyGuard**: Prevents reentrancy attacks
+- **Ownable**: Only owner can withdraw funds
+
+### Running Contract Tests
+
+```bash
+# Run all contract tests
+npm run test:contract
+
+# Or directly with Hardhat
+npx hardhat test src/contracts/__tests__/MyNFT.test.ts
+```
+
+### Deploying the Contract
+
+#### Deploy to Local Network
+
+1. Start a local Hardhat node:
+
+   ```bash
+   npx hardhat node
+   ```
+
+2. Deploy to the local network:
+
+   ```bash
+   npm run deploy:local
+   ```
+
+   Contract address will be saved to `contract-address-local.json`.
+
+#### Deploy to Sepolia Testnet
+
+1. Ensure you have:
+   - `PRIVATE_KEY` set in `.env`
+   - Sepolia ETH in your wallet ([Get testnet ETH](https://sepoliafaucet.com/))
+
+2. Deploy to Sepolia:
+
+   ```bash
+   npm run deploy:sepolia
+   ```
+
+   Contract address will be saved to `contract-address-sepolia.json`.
+
+### Updating Frontend Contract Address
+
+After deployment, update the contract address in:
+
+- `src/config/wagmi.ts`
+- `src/abi/myNft.ts` (if ABI changed)
 
 ---
 
@@ -183,42 +336,11 @@ export const CHAIN_CONFIG = {
 };
 ```
 
-### UI Configuration
-
-Customizable UI settings including:
-
-- Toast notifications (duration, position)
-- Polling intervals for real-time updates
-- Animation settings
-- Pagination defaults
-- Skeleton loading states
-
----
-
-## 🔌 Smart Contract Integration
-
-### Required Contract ABI
-
-The DApp expects an NFT contract with the following standard functions:
-
-- `mint(uint256 quantity)` - Mint NFTs
-- `totalSupply()` - Get current supply
-- `maxSupply()` - Get maximum supply
-- `tokenURI(uint256 tokenId)` - Get metadata URI
-- `ownerOf(uint256 tokenId)` - Get token owner
-- `balanceOf(address owner)` - Get user's NFT count
-
-### Contract Deployment
-
-1. Deploy your ERC-721 contract to Sepolia or Mainnet
-2. Update the contract address in `src/config/wagmi.ts`
-3. Add your contract ABI to `src/abi/myNft.ts`
-
 ---
 
 ## 🧪 Testing
 
-Run the complete test suite:
+Run the complete test suite (both contract and frontend):
 
 ```bash
 npm run test
@@ -227,6 +349,12 @@ npm run test
 Run specific test categories:
 
 ```bash
+# Contract tests (Hardhat)
+npm run test:contract
+
+# Frontend tests (Vitest)
+npm run test:frontend
+
 # Component tests
 npm run test:components
 
@@ -299,15 +427,6 @@ transports: {
 - **`useUserNFTHistory`** - Fetch user's transaction history
 - **`useToast`** - Unified toast notification system
 
-### Error Handling
-
-Comprehensive error messages defined in `constants.ts`:
-
-- Wallet connection errors
-- Network switching prompts
-- Transaction failures
-- Insufficient balance warnings
-
 ---
 
 ## 📱 Browser Support
@@ -331,6 +450,8 @@ Comprehensive error messages defined in `constants.ts`:
 - ✅ Environment variables for sensitive data
 - ✅ HTTPS required for production
 - ✅ Input validation on all user inputs
+- ✅ ReentrancyGuard on smart contract
+- ✅ Ownable pattern for withdrawal
 
 ---
 
@@ -359,6 +480,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
+- [Hardhat](https://hardhat.org/) - Ethereum Development Environment
+- [OpenZeppelin](https://openzeppelin.com/) - Secure Smart Contract Library
 - [Wagmi](https://wagmi.sh/) - React Hooks for Ethereum
 - [Viem](https://viem.sh/) - TypeScript Interface for Ethereum
 - [RainbowKit](https://rainbowkit.com/) - Wallet Connection UI
