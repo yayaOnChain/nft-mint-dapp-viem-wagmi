@@ -6,8 +6,8 @@
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client", "node", "mocha", "chai"],
     "skipLibCheck": true,
+    "typeRoots": ["./node_modules/@types"],
     "paths": {
       "@/*": ["./src/*"],
       "typechain-types": ["./typechain-types"]
@@ -29,5 +29,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "typechain-types"]
+  "include": ["src", "typechain-types", "hardhat.config.ts"]
 }
