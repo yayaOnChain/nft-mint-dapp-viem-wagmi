@@ -10,11 +10,17 @@ interface EnvConfig {
   alchemyNetwork: string;
   useWebSocket: boolean;
   alchemyWsUrl?: string;
+  pinataJwt: string;
+  pinataGateway?: string;
 }
 
 // Validate required environment variables
 const validateEnv = () => {
-  const required = ["VITE_WALLET_CONNECT_PROJECT_ID", "VITE_CONTRACT_ADDRESS"];
+  const required = [
+    "VITE_WALLET_CONNECT_PROJECT_ID",
+    "VITE_CONTRACT_ADDRESS",
+    "VITE_PINATA_JWT",
+  ];
 
   required.forEach((key) => {
     if (!import.meta.env[key]) {
@@ -35,6 +41,8 @@ export const env: EnvConfig = {
   alchemyNetwork: import.meta.env.VITE_ALCHEMY_NETWORK || "eth-sepolia",
   useWebSocket: import.meta.env.VITE_USE_WEBSOCKET === "true",
   alchemyWsUrl: import.meta.env.VITE_ALCHEMY_WS_SEPOLIA,
+  pinataJwt: import.meta.env.VITE_PINATA_JWT || "",
+  pinataGateway: import.meta.env.VITE_PINATA_GATEWAY || "https://ipfs.io/ipfs/",
 };
 
 // Export individual values for convenience
@@ -45,4 +53,6 @@ export const {
   alchemyNetwork,
   useWebSocket,
   alchemyWsUrl,
+  pinataJwt,
+  pinataGateway,
 } = env;
