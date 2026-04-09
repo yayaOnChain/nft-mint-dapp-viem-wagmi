@@ -11,3 +11,15 @@ export {
   setContractServiceInstance,
   resetContractServiceInstance,
 } from "@/services/contractService";
+
+export {
+  uploadFileToIPFS,
+  uploadMetadataToIPFS,
+  uploadNFTToIPFS,
+  ipfsToHttpUrl,
+} from "@/services/ipfsService";
+
+export type {
+  PinataUploadResult,
+  NFTMetadata,
+} from "@/services/ipfsService";
