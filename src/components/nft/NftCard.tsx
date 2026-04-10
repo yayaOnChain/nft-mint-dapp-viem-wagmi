@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import type { UserNFT } from "@/types";
+import { ipfsToHttpUrl } from "@/services/ipfsService";
+import { IPFS_GATEWAYS } from "@/lib/constants";
 
 /**
  * Display a single NFT card with image, name, token ID, and contract address.
+ * Uses multiple IPFS gateways with fallback logic for better reliability.
  */
 export const NftCard = ({ nft }: { nft: UserNFT }) => {
   const [imageError, setImageError] = useState(false);
+  const [currentGatewayIndex, setCurrentGatewayIndex] = useState(0);
 
   // Try to fetch NFT metadata from token URI
   const [metadata, setMetadata] = useState<{
@@ -18,30 +22,57 @@ export const NftCard = ({ nft }: { nft: UserNFT }) => {
       if (!nft.tokenUri || imageError) return;
 
       try {
-        // Handle IPFS URIs
+        // Convert IPFS URI to HTTPS URL using current gateway
         let uri = nft.tokenUri;
         if (uri.startsWith("ipfs://")) {
-          uri = uri.replace("ipfs://", "https://ipfs.io/ipfs/");
+          uri = ipfsToHttpUrl(uri, currentGatewayIndex);
         }
 
         const response = await fetch(uri);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status}`);
+        }
+
         const data = await response.json();
         setMetadata(data);
       } catch (err) {
         console.error("Failed to fetch NFT metadata:", err);
-        setImageError(true);
+
+        // Try next gateway if available
+        if (currentGatewayIndex < IPFS_GATEWAYS.length - 1) {
+          setCurrentGatewayIndex((prev) => prev + 1);
+        } else {
+          setImageError(true);
+        }
       }
     };
 
     fetchMetadata();
-  }, [nft.tokenUri, imageError]);
+  }, [nft.tokenUri, imageError, currentGatewayIndex]);
 
   // Determine if we should show the placeholder emoji
   const showPlaceholder = !nft.tokenUri || imageError;
 
-  // Fallback image if metadata fails
-  const displayImage =
-    metadata?.image || (!showPlaceholder ? nft.tokenUri : null);
+  // Determine image URL with gateway fallback
+  const getDisplayImage = (): string | null => {
+    if (metadata?.image) {
+      if (metadata.image.startsWith("ipfs://")) {
+        return ipfsToHttpUrl(metadata.image, currentGatewayIndex);
+      }
+      return metadata.image;
+    }
+
+    if (nft.tokenUri && !showPlaceholder) {
+      if (nft.tokenUri.startsWith("ipfs://")) {
+        return ipfsToHttpUrl(nft.tokenUri, currentGatewayIndex);
+      }
+      return nft.tokenUri;
+    }
+
+    return null;
+  };
+
+  const displayImage = getDisplayImage();
 
   // Format token ID with leading zeros (optional, for display consistency)
   const formatTokenId = (tokenId: string): string => {
@@ -57,7 +88,14 @@ export const NftCard = ({ nft }: { nft: UserNFT }) => {
             src={displayImage}
             alt={`NFT #${nft.tokenId}`}
             className="w-full h-full object-cover"
-            onError={() => setImageError(true)}
+            onError={() => {
+              // Try next gateway on image load error
+              if (currentGatewayIndex < IPFS_GATEWAYS.length - 1) {
+                setCurrentGatewayIndex((prev) => prev + 1);
+              } else {
+                setImageError(true);
+              }
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
