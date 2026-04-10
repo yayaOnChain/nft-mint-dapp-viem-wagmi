@@ -3,14 +3,17 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 import { NftMinter } from "@/components/nft/NftMinter";
+import { NFTCreator } from "@/components/nft/NFTCreator";
 import { NftGallery } from "@/components/nft/NftGallery";
 import { RecentMints } from "@/components/nft/RecentMints";
 import { TransactionHistory } from "@/components/transaction/TransactionHistory";
 import { APP_CONFIG } from "@/lib/constants";
+import { Button } from "@/components/ui";
 
 function App() {
   const { isConnected } = useAccount();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [mintMode, setMintMode] = useState<"simple" | "creator">("simple");
 
   const githubUrl = APP_CONFIG.repository;
   const twitterUrl = APP_CONFIG.twitter;
@@ -42,7 +45,7 @@ function App() {
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
             Join our exclusive collection. Each NFT is unique and stored on the
-            Ethereum blockchain.
+            Ethereum blockchain with IPFS metadata.
           </p>
         </section>
 
@@ -66,7 +69,7 @@ function App() {
                   />
                 </svg>
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="text-2xl font-bold bg-linear-to-r from-purple-300 via-pink-300 to-purple-300 bg-clip-text text-transparent">
                   Mint NFT
                 </h3>
@@ -76,8 +79,33 @@ function App() {
               </div>
             </div>
           </div>
+
+          {/* Mode Switcher */}
+          {isConnected && (
+            <div className="flex gap-2 mb-6">
+              <Button
+                variant={mintMode === "simple" ? "primary" : "secondary"}
+                onClick={() => setMintMode("simple")}
+                className="flex-1"
+              >
+                Simple Mint
+              </Button>
+              <Button
+                variant={mintMode === "creator" ? "primary" : "secondary"}
+                onClick={() => setMintMode("creator")}
+                className="flex-1"
+              >
+                NFT Creator (IPFS)
+              </Button>
+            </div>
+          )}
+
           {isConnected ? (
-            <NftMinter onMintSuccess={() => setRefreshKey((k) => k + 1)} />
+            mintMode === "simple" ? (
+              <NftMinter onMintSuccess={() => setRefreshKey((k) => k + 1)} />
+            ) : (
+              <NFTCreator onMintSuccess={() => setRefreshKey((k) => k + 1)} />
+            )
           ) : (
             <div className="text-center py-12 bg-gray-800/50 rounded-xl border border-gray-700">
               <p className="text-gray-400 mb-4">
