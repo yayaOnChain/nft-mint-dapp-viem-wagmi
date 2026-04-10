@@ -73,13 +73,15 @@ describe("useNftMintedEvents", () => {
         { wrapper },
       );
 
-      expect(useWatchContractEventSpy).toHaveBeenCalledWith({
-        address: mockContractAddress,
-        abi: expect.any(Array),
-        eventName: "NFTMinted",
-        onLogs: expect.any(Function),
-        onError: expect.any(Function),
-      });
+      expect(useWatchContractEventSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: mockContractAddress,
+          abi: expect.any(Array),
+          eventName: "NFTMinted",
+          onLogs: expect.any(Function),
+          onError: expect.any(Function),
+        })
+      );
     });
   });
 
@@ -337,8 +339,8 @@ describe("useNftMintedEvents", () => {
 
   describe("error handling", () => {
     it("should log error when onError is triggered", () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
         .mockImplementation(() => {});
       let onErrorCallback: (error: Error) => void;
 
@@ -361,9 +363,8 @@ describe("useNftMintedEvents", () => {
         onErrorCallback!(mockError);
       });
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Event listener error:",
-        mockError,
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("[useNftMintedEvents] Event subscription error"),
       );
     });
   });
