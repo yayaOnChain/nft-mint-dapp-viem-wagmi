@@ -19,8 +19,7 @@ export const useNftMintedEventsUnified = ({
 }: UseNftMintedEventsUnifiedProps) => {
   // Check if WebSocket endpoint is configured (via env variable)
   const hasWebSocket =
-    import.meta.env.VITE_USE_WEBSOCKETS === "true" ||
-    !!import.meta.env.VITE_ALCHEMY_WS_SEPOLIA;
+    import.meta.env.VITE_USE_WEBSOCKET === "true";
 
   // Use both hooks and return the appropriate one based on environment
   // This ensures hooks are called in the same order on every render
