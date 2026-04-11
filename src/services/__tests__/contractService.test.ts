@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   ContractService,
   getContractService,
@@ -7,6 +7,7 @@ import {
 } from '@/services/contractService';
 import { createConfig, http } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
+import type { Log } from 'viem';
 
 // Mock wagmi actions
 vi.mock('wagmi/actions', () => ({
@@ -31,19 +32,21 @@ describe('ContractService', () => {
     },
   });
 
+  const mockAbi = [
+    {
+      inputs: [],
+      name: 'totalMinted',
+      outputs: [{ type: 'uint256' as const }],
+      stateMutability: 'view' as const,
+      type: 'function' as const,
+    },
+  ];
+
   const mockContractParams = {
     config: mockConfig,
     address: '0x1234567890123456789012345678901234567890' as `0x${string}`,
-    abi: [
-      {
-        inputs: [],
-        name: 'totalMinted',
-        outputs: [{ type: 'uint256' }],
-        stateMutability: 'view',
-        type: 'function',
-      },
-    ],
-    functionName: 'totalMinted',
+    abi: mockAbi,
+    functionName: 'totalMinted' as const,
   };
 
   beforeEach(() => {
@@ -85,7 +88,7 @@ describe('ContractService', () => {
 
       await contractService.read({
         ...mockContractParams,
-        functionName: 'balanceOf',
+        functionName: 'balanceOf' as const,
         args: ['0xUserAddress123456789012345678901234567890'],
       });
 
@@ -105,7 +108,7 @@ describe('ContractService', () => {
 
       const result = await contractService.write({
         ...mockContractParams,
-        functionName: 'mint',
+        functionName: 'mint' as const,
         args: [1n],
         value: 10000000000000000n,
       });
@@ -128,7 +131,7 @@ describe('ContractService', () => {
 
       await contractService.write({
         ...mockContractParams,
-        functionName: 'approve',
+        functionName: 'approve' as const,
         args: ['0xSpenderAddress123456789012345678901234567'],
       });
 
@@ -147,10 +150,26 @@ describe('ContractService', () => {
       const mockHash = '0xabc123def456789012345678901234567890123456789012345678901234abcd';
       const mockReceipt = {
         transactionHash: mockHash,
+        blockHash: '0xblockhash123456789012345678901234567890123456789012345678901234',
         blockNumber: 12345678n,
-        status: 1,
+        blockTimestamp: 1700000000n,
+        status: 'success' as const,
+        cumulativeGasUsed: 1000000n,
+        effectiveGasPrice: 1000000000n,
+        gasUsed: 500000n,
+        logs: [] as Log[],
+        logsBloom: '0x',
+        contractAddress: null,
+        from: '0xfrom123456789012345678901234567890123456789',
+        to: '0xto123456789012345678901234567890123456789',
+        transactionIndex: 0n,
+        type: 'eip1559' as const,
+        blobGasUsed: undefined,
+        blobGasPrice: undefined,
+        chainId: sepolia.id,
+        root: undefined,
       };
-      vi.mocked(waitForTransactionReceipt).mockResolvedValue(mockReceipt);
+      (waitForTransactionReceipt as ReturnType<typeof vi.fn>).mockResolvedValue(mockReceipt);
 
       const result = await contractService.waitForReceipt(mockHash);
 
