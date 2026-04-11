@@ -15,3 +15,14 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+// CSS module declarations
+declare module "*.css" {
+  const content: Record<string, string>;
+  export default content;
+}
+
+// Import RainbowKit styles for type checking
+declare module "@rainbow-me/rainbowkit/styles.css" {
+  export {}
+}
