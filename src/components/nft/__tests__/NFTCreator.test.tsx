@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { NFTCreator } from "@/components/nft/NFTCreator";
 import * as wagmi from "wagmi";
 
@@ -7,7 +7,15 @@ import * as wagmi from "wagmi";
 vi.mock("wagmi", () => ({
   useAccount: vi.fn(() => ({
     address: "0x1234567890123456789012345678901234567890",
+    addresses: ["0x1234567890123456789012345678901234567890"],
+    chain: undefined,
+    chainId: undefined,
+    connector: undefined,
     isConnected: true,
+    isReconnecting: false,
+    isConnecting: false,
+    isDisconnected: false,
+    status: "connected" as const,
   })),
   useReadContract: vi.fn(() => ({
     data: undefined,
@@ -68,7 +76,15 @@ describe("NFTCreator", () => {
     it("should show wallet connection message when not connected", () => {
       vi.mocked(wagmi.useAccount).mockReturnValueOnce({
         address: undefined,
+        addresses: undefined,
+        chain: undefined,
+        chainId: undefined,
+        connector: undefined,
         isConnected: false,
+        isReconnecting: false,
+        isConnecting: false,
+        isDisconnected: true,
+        status: "disconnected" as const,
       });
 
       render(<NFTCreator onMintSuccess={mockOnMintSuccess} />);
