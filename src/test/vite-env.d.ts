@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_ALCHEMY_NETWORK: string;
   readonly VITE_USE_WEBSOCKET: string;
   readonly VITE_ALCHEMY_WS_SEPOLIA?: string;
+  readonly VITE_PINATA_JWT: string;
+  readonly VITE_PINATA_GATEWAY?: string;
 }
 
 interface ImportMeta {

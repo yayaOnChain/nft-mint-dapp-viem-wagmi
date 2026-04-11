@@ -20,17 +20,19 @@ const validateEnv = () => {
     "VITE_WALLET_CONNECT_PROJECT_ID",
     "VITE_CONTRACT_ADDRESS",
     "VITE_PINATA_JWT",
-  ];
+  ] as const;
+
+  const env = import.meta.env as unknown as Record<string, string>;
 
   required.forEach((key) => {
-    if (!import.meta.env[key]) {
+    if (!env[key]) {
       throw new Error(`Missing required environment variable: ${key}`);
     }
   });
 };
 
-// Run validation on module load (development only)
-if (import.meta.env.DEV) {
+// Run validation on module load
+if (import.meta.env) {
   validateEnv();
 }
 
