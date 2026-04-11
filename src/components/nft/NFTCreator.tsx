@@ -57,7 +57,6 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const [metadataIpfsUrl, setMetadataIpfsUrl] = useState<string>("");
-  const [_imageIpfsUrl, setImageIpfsUrl] = useState<string>("");
 
   // Mint state
   const [quantity, setQuantity] = useState(1);
@@ -86,7 +85,7 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
     functionName: "MINT_PRICE",
   });
 
-  const { data: _userBalance, refetch: refetchUserBalance } = useReadContract({
+  const { refetch: refetchUserBalance } = useReadContract({
     address: contractAddress,
     abi: myNftAbi,
     functionName: "balanceOf",
@@ -197,7 +196,6 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
       // Upload to IPFS
       const result = await uploadNFTToIPFS(imageToUpload, metadata, pinataJwt);
 
-      setImageIpfsUrl(result.imageUrl);
       setMetadataIpfsUrl(result.metadataUrl);
       setUploadProgress("Upload complete!");
 
@@ -268,7 +266,6 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
     }
     setAttributes([]);
     setMetadataIpfsUrl("");
-    setImageIpfsUrl("");
     setQuantity(1);
     resetWriteContract();
 
