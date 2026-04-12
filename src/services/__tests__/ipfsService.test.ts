@@ -69,8 +69,8 @@ describe("ipfsService", () => {
 
       await uploadFileToIPFS(mockFile, mockPinataJwt);
 
-      const fetchCall = (global.fetch as any).mock.calls[0];
-      const formData = fetchCall[1].body;
+      const fetchCall = vi.mocked(global.fetch).mock.calls[0];
+      const formData = fetchCall?.[1]?.body;
 
       expect(formData).toBeInstanceOf(FormData);
     });
@@ -155,8 +155,8 @@ describe("ipfsService", () => {
 
       await uploadMetadataToIPFS(mockMetadata, mockPinataJwt);
 
-      const fetchCall = (global.fetch as any).mock.calls[0];
-      const body = JSON.parse(fetchCall[1].body);
+      const fetchCall = vi.mocked(global.fetch).mock.calls[0];
+      const body = JSON.parse(fetchCall?.[1]?.body as string);
 
       expect(body.pinataContent).toEqual(mockMetadata);
       expect(body.pinataMetadata.name).toBe("Test NFT.json");
@@ -236,8 +236,8 @@ describe("ipfsService", () => {
 
       await uploadNFTToIPFS(mockImageFile, mockMetadata, mockPinataJwt);
 
-      const secondCall = (global.fetch as any).mock.calls[1];
-      const body = JSON.parse(secondCall[1].body);
+      const secondCall = vi.mocked(global.fetch).mock.calls[1];
+      const body = JSON.parse(secondCall?.[1]?.body as string);
 
       expect(body.pinataContent.image).toBe("ipfs://QmImageHash123");
     });
