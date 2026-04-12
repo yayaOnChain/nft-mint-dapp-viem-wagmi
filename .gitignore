@@ -34,3 +34,6 @@ cache
 
 # Contract address
 contract-address-*.json
+
+# Ignore generated typescript layout 
+*.d.ts
