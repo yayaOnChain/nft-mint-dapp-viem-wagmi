@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// Import standard OpenZeppelin ERC721 with URI storage support
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+// Combines O(1) gas efficiency of ERC721A with the flexibility of IPFS Metadata
+import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
  * @title MyNFT
- * @dev Implementation of a mintable ERC721 token with max supply, price control, and IPFS metadata support.
- * Uses ERC721URIStorage for flexible per-token metadata management.
+ * @dev Implementation of a mintable ERC721A token with max supply, price control, and IPFS metadata support.
  */
-contract MyNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
+contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
     // The maximum number of NFTs that can be minted
     uint256 public constant MAX_SUPPLY = 1000;
 
@@ -22,8 +20,8 @@ contract MyNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
     // Base URI for token metadata (e.g., IPFS gateway URL)
     string private _baseTokenURI;
     
-    // Counter for total minted tokens
-    uint256 private _totalMintedCounter;
+    // Mapping for individual token URIs (replaces OpenZeppelin's ERC721URIStorage)
+    mapping(uint256 => string) private _tokenURIs;
 
     // Event emitted when a new NFT is minted
     event NFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI);
@@ -33,27 +31,21 @@ contract MyNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
 
     /**
      * @dev Constructor sets the initial owner and base URI.
-     * @param initialOwner The address of the contract owner.
-     * @param initialBaseURI The initial base URI for token metadata (e.g., IPFS gateway URL).
      */
     constructor(address initialOwner, string memory initialBaseURI) 
-        ERC721("MyProjectNFT", "MPNFT") 
+        ERC721A("MyProjectNFT", "MPNFT") 
     {
         transferOwnership(initialOwner);
         _baseTokenURI = initialBaseURI;
-        _totalMintedCounter = 0;
     }
 
     /**
      * @dev Allows users to mint NFTs.
-     * Requirements:
-     * - Total supply must not exceed MAX_SUPPLY.
-     * - Sent value must match MINT_PRICE * quantity.
      */
     function mint(uint256 quantity) external payable nonReentrant {
         require(quantity > 0, "Mint quantity must be greater than 0");
         
-        uint256 currentTotal = _totalMintedCounter;
+        uint256 currentTotal = _totalMinted();
 
         // Check if minting this quantity exceeds max supply
         require(currentTotal + quantity <= MAX_SUPPLY, "Max supply exceeded");
@@ -61,12 +53,17 @@ contract MyNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
         // Check if the correct amount of ETH is sent
         require(msg.value >= MINT_PRICE * quantity, "Insufficient ETH sent");
 
-        // Mint NFTs and set token URIs
-        for (uint256 i = 0; i < quantity; i++) {
-            _totalMintedCounter++;
-            uint256 tokenId = _totalMintedCounter;
-            _safeMint(msg.sender, tokenId);
+        // O(1) BATCH MINTING USING ERC721A: ONLY 1 STATE UPDATE (HIGHLY GAS EFFICIENT!)
+        _mint(msg.sender, quantity);
+
+        // This loop is now ONLY used to emit Event logs for the frontend
+        // Gas for emitting Events is exponentially cheaper than State Modifications.
+        for (uint256 i = 0; i < quantity; ) {
+            uint256 tokenId = currentTotal + i;
             emit NFTMinted(msg.sender, tokenId, tokenURI(tokenId));
+            
+            // Unchecked ++i saves extra gas at the Opcode level
+            unchecked { ++i; }
         }
     }
 
@@ -74,7 +71,6 @@ contract MyNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
      * @dev Allows the owner to withdraw all ETH collected from minting.
      */
     function withdraw() external onlyOwner {
-        // Transfer the entire balance to the owner
         (bool success, ) = payable(owner()).call{value: address(this).balance}("");
         require(success, "Withdraw failed");
     }
@@ -83,12 +79,11 @@ contract MyNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
      * @dev Returns the total number of tokens minted so far.
      */
     function totalMinted() external view returns (uint256) {
-        return _totalMintedCounter;
+        return _totalMinted();
     }
     
     /**
      * @dev Sets the base URI for all token IDs.
-     * @param baseURI The new base URI.
      */
     function setBaseURI(string memory baseURI) external onlyOwner {
         _baseTokenURI = baseURI;
@@ -96,33 +91,41 @@ contract MyNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
     }
     
     /**
-     * @dev Sets the token URI for a specific token ID.
-     * @param tokenId The token ID to update.
-     * @param tokenURI The new token URI (e.g., IPFS URL).
+     * @dev Sets the token URI for a specific token ID (Individual IPFS Mapping).
      */
-    function setTokenURI(uint256 tokenId, string memory tokenURI) external onlyOwner {
+    function setTokenURI(uint256 tokenId, string memory _tokenURI) external onlyOwner {
         require(_exists(tokenId), "Token does not exist");
-        _setTokenURI(tokenId, tokenURI);
+        _tokenURIs[tokenId] = _tokenURI;
     }
     
-    /**
-     * @dev Returns the base URI for token metadata.
-     */
     function baseTokenURI() external view returns (string memory) {
         return _baseTokenURI;
     }
 
-    /**
-     * @dev Override baseURI to use custom storage.
-     */
     function _baseURI() internal view override returns (string memory) {
         return _baseTokenURI;
     }
     
     /**
-     * @dev Returns whether the token exists.
+     * @dev Combines the Contract's Base URI with the Token's Specific URI
      */
-    function _exists(uint256 tokenId) internal view override returns (bool) {
-        return _ownerOf(tokenId) != address(0);
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        require(_exists(tokenId), "URI query for nonexistent token");
+
+        string memory _tokenURI = _tokenURIs[tokenId];
+        string memory base = _baseURI();
+
+        // If there is no Base URI, return the Specific URI directly
+        if (bytes(base).length == 0) {
+            return _tokenURI;
+        }
+        
+        // If both are present, concatenate: Base_URI + Specific_URI
+        if (bytes(_tokenURI).length > 0) {
+            return string(abi.encodePacked(base, _tokenURI));
+        }
+        
+        // If there is a Base_URI but NO Specific_URI, concatenate: Base_URI + token_id
+        return string(abi.encodePacked(base, _toString(tokenId)));
     }
 }
