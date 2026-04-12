@@ -13,9 +13,13 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 ## 📸 App Preview
 
-![MyProjectNFT DApp Preview](assets/screenshots/app-preview.png)
+### 1. Simple Mint Mode
+![Simple Mint Preview](assets/screenshots/simple-mint.png)
+*Optimized bulk minting interface for core collections*
 
-_The complete NFT minting interface with real-time gallery and transaction history_
+### 2. NFT Creator (IPFS) Mode
+![NFT Creator Preview](assets/screenshots/nft-creator.png)
+*1-of-1 decentralized IPFS upload and custom minting studio*
 
 ---
 
@@ -24,19 +28,20 @@ _The complete NFT minting interface with real-time gallery and transaction histo
 ### Core Functionality
 
 - 🔗 **Wallet Connection** - Seamless multi-wallet support via RainbowKit
-- 🎨 **NFT Minting** - Mint unique NFTs with customizable quantities
+- 🎨 **Dual Minting Modes** - Choose between optimized bulk minting ("Simple Mint") or decentralized 1-of-1 art uploads ("NFT Creator IPFS").
 - 🖼️ **NFT Gallery** - View your personal NFT collection in real-time
 - 📜 **Transaction History** - Track all minting activities and transactions
 - 🔴 **Live Updates** - Real-time event polling for recent community mints
 
 ### Smart Contract
 
-- 📝 **ERC-721 Compliant** - Standard NFT implementation using OpenZeppelin 4.9.6
-- 💰 **Mint Price Control** - Fixed mint price of 0.01 ETH
-- 📊 **Max Supply Limit** - Capped at 1,000 NFTs
-- 🔒 **Reentrancy Guard** - Protection against reentrancy attacks
-- 💸 **Owner Withdrawal** - Secure fund withdrawal for contract owner
-- 🧪 **Comprehensive Tests** - Full test coverage with Hardhat + Chai
+- 📝 **ERC721A Optimized** - Highly gas-efficient batch minting O(1) implementation using Azuki's ERC721A standard.
+- 🔗 **IPFS Metadata Storage** - Custom per-token URI mapping for fully decentralized metadata hosting.
+- 💰 **Mint Price Control** - Fixed mint price of 0.01 ETH.
+- 📊 **Max Supply Limit** - Capped at 1,000 NFTs.
+- 🔒 **Maximum Security** - Strict Checks-Effects-Interactions pattern paired with ReentrancyGuard.
+- 💸 **Owner Withdrawal** - Secure fund withdrawal for contract owner.
+- 🧪 **Comprehensive Tests** - Full test coverage with Hardhat + Chai.
 
 ### Technical Highlights
 
@@ -68,13 +73,13 @@ _The complete NFT minting interface with real-time gallery and transaction histo
 
 ### Smart Contract
 
-| Category            | Technology                   |
-| ------------------- | ---------------------------- |
-| **Framework**       | Hardhat 2.28.6               |
-| **Language**        | Solidity 0.8.20              |
-| **Library**         | OpenZeppelin Contracts 4.9.6 |
-| **Testing**         | Hardhat + Chai + Ethers v6   |
-| **Type Generation** | TypeChain (ethers-v6)        |
+| Category            | Technology                            |
+| ------------------- | ------------------------------------- |
+| **Framework**       | Hardhat 2.28.6                        |
+| **Language**        | Solidity 0.8.20                       |
+| **Library**         | OpenZeppelin Contracts 4.9.6, ERC721A |
+| **Testing**         | Hardhat + Chai + Ethers v6            |
+| **Type Generation** | TypeChain (ethers-v6)                 |
 
 ---
 
@@ -241,11 +246,13 @@ Located in `src/contracts/MyNFT.sol`:
 ```solidity
 pragma solidity ^0.8.20;
 
-contract MyNFT is ERC721, Ownable, ReentrancyGuard {
+contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
     uint256 public constant MAX_SUPPLY = 1000;
     uint256 public constant MINT_PRICE = 0.01 ether;
 
     function mint(uint256 quantity) external payable;
+    function setBaseURI(string memory baseURI) external onlyOwner;
+    function setTokenURI(uint256 tokenId, string memory _tokenURI) external onlyOwner;
     function withdraw() external onlyOwner;
     function totalMinted() external view returns (uint256);
 }
@@ -408,6 +415,13 @@ Deploy the `dist/` folder to any static hosting service:
 
 ## 🎯 Key Features Explained
 
+### Dual Minting Architecture
+
+The application is structured to support the two most dominant NFT deployment models in the industry within a single interface:
+
+- **Simple Mint (Collection Mode):** Designed for generative collections (e.g., BAYC, Azuki). This taps into the highly gas-optimized `O(1)` batch minting properties of the `ERC721A` contract, allowing users to mint multiple NFTs instantly using a single predefined `BaseURI` without extra storage overhead.
+- **NFT Creator (1-of-1 IPFS Mode):** Designed for individual creators. Users can upload their artwork to IPFS on-the-fly and bind the CID as a custom `tokenURI`. The smart contract natively overrides generic metadata and protects these individual pieces securely.
+
 ### Real-time Event Listening
 
 The app uses WebSocket connections for instant updates when NFTs are minted:
@@ -474,7 +488,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support & Contact
 
 - **Repository:** [GitHub](https://github.com/yayaOnChain/nft-mint-dapp-viem-wagmi)
-- **Twitter:** [@yayaOnChain](https://x.com/yayaOnChain)
+- **Twitter / X:** [@yayaOnChain](https://x.com/yayaOnChain)
 
 ---
 
