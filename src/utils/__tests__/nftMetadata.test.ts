@@ -197,29 +197,28 @@ describe("nftMetadata utilities", () => {
 
       const mockContext = {
         drawImage: vi.fn(),
-      };
+      } as unknown as CanvasRenderingContext2D;
 
       vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
-        mockContext as any
+        mockContext
       );
       vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(
         mockToBlob
       );
 
       // Mock Image
-      const MockImage = vi.fn().mockImplementation(function (this: any) {
+      const MockImage = vi.fn().mockImplementation(function (this: HTMLImageElement) {
         this.onload = null;
         this.onerror = null;
         this.width = 2000;
         this.height = 1500;
         this.src = "";
 
-        const self = this;
         setTimeout(() => {
-          if (self.onload) self.onload();
+          if (this.onload) this.onload(new Event('load'));
         }, 0);
         return this;
-      });
+      }) as unknown as new () => HTMLImageElement;
 
       vi.stubGlobal("Image", MockImage);
 
@@ -235,10 +234,10 @@ describe("nftMetadata utilities", () => {
 
       const mockContext = {
         drawImage: vi.fn(),
-      };
+      } as unknown as CanvasRenderingContext2D;
 
       vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
-        mockContext as any
+        mockContext
       );
       vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(
         (callback: (blob: Blob | null) => void) => {
@@ -246,17 +245,16 @@ describe("nftMetadata utilities", () => {
         }
       );
 
-      const MockImage = vi.fn().mockImplementation(function (this: any) {
+      const MockImage = vi.fn().mockImplementation(function (this: HTMLImageElement) {
         this.onload = null;
         this.width = 3000;
         this.height = 2000;
 
-        const self = this;
         setTimeout(() => {
-          if (self.onload) self.onload();
+          if (this.onload) this.onload(new Event('load'));
         }, 0);
         return this;
-      });
+      }) as unknown as new () => HTMLImageElement;
 
       vi.stubGlobal("Image", MockImage);
 
@@ -268,15 +266,14 @@ describe("nftMetadata utilities", () => {
     it("should reject if image loading fails", async () => {
       const file = new File(["content"], "test.png", { type: "image/png" });
 
-      const MockImage = vi.fn().mockImplementation(function (this: any) {
+      const MockImage = vi.fn().mockImplementation(function (this: HTMLImageElement) {
         this.onerror = null;
 
-        const self = this;
         setTimeout(() => {
-          if (self.onerror) self.onerror();
+          if (this.onerror) this.onerror(new Event('error'));
         }, 0);
         return this;
-      });
+      }) as unknown as new () => HTMLImageElement;
 
       vi.stubGlobal("Image", MockImage);
 
@@ -308,7 +305,7 @@ describe("nftMetadata utilities", () => {
       revokeImagePreview(url);
 
       expect(revokeSpy).toHaveBeenCalledWith(url);
-      
+
       revokeSpy.mockRestore();
     });
   });
