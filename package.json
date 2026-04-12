@@ -2,9 +2,11 @@
   "name": "nft-mint-dapp-viem-wagmi",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "compile": "npx hardhat compile",
     "clean": "npx hardhat clean",
+    "clean:types": "find . -name '*.d.ts' -not -path '*/node_modules/*' -not -path '*/typechain-types/*' -not -name 'vite-env*' -type f -delete",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",

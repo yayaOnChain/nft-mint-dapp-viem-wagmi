@@ -7,7 +7,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     // Replace default ignore patterns with custom ones
-    ignores: ["dist"],
+    ignores: ["dist", "typechain-types", "artifacts"],
   },
   {
     // Extend recommended configs for both JavaScript and TypeScript
