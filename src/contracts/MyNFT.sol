@@ -54,12 +54,13 @@ contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
         require(msg.value >= MINT_PRICE * quantity, "Insufficient ETH sent");
 
         // O(1) BATCH MINTING USING ERC721A: ONLY 1 STATE UPDATE (HIGHLY GAS EFFICIENT!)
+        uint256 startTokenId = _nextTokenId();
         _mint(msg.sender, quantity);
 
         // This loop is now ONLY used to emit Event logs for the frontend
         // Gas for emitting Events is exponentially cheaper than State Modifications.
         for (uint256 i = 0; i < quantity; ) {
-            uint256 tokenId = currentTotal + i;
+            uint256 tokenId = startTokenId + i;
             emit NFTMinted(msg.sender, tokenId, tokenURI(tokenId));
             
             // Unchecked ++i saves extra gas at the Opcode level
@@ -104,6 +105,13 @@ contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
 
     function _baseURI() internal view override returns (string memory) {
         return _baseTokenURI;
+    }
+
+    /**
+     * @dev Starting token ID overwritten to 1 to match expected test behaviors.
+     */
+    function _startTokenId() internal view virtual override returns (uint256) {
+        return 1;
     }
     
     /**
