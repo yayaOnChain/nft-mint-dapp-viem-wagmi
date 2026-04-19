@@ -2,7 +2,6 @@
   "name": "nft-mint-dapp-viem-wagmi",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "compile": "npx hardhat compile",
     "clean": "npx hardhat clean",

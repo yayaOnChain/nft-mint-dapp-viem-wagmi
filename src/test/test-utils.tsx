@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { type RenderOptions } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { QueryClient } from "@tanstack/react-query";
-import { TestProviders } from "./TestProviders";
+import { TestProviders } from "./test-providers";
 
 interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
   queryClient?: QueryClient;
