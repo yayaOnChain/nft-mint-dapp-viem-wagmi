@@ -1,60 +1,37 @@
 /**
- * Environment configuration with validation
+ * Environment configuration for Next.js
  * All env variables should be accessed through this file
  */
 
 interface EnvConfig {
   walletConnectProjectId: string;
   contractAddress: `0x${string}`;
-  alchemyApiKey: string;
-  alchemyNetwork: string;
+  rpcUrlSepolia: string;
   useWebSocket: boolean;
-  alchemyWsUrl?: string;
-  pinataJwt: string;
-  pinataGateway?: string;
 }
 
-// Validate required environment variables
-const validateEnv = () => {
-  const required = [
-    "VITE_WALLET_CONNECT_PROJECT_ID",
-    "VITE_CONTRACT_ADDRESS",
-    "VITE_PINATA_JWT",
-  ] as const;
-
-  const env = import.meta.env as unknown as Record<string, string>;
-
-  required.forEach((key) => {
-    if (!env[key]) {
-      throw new Error(`Missing required environment variable: ${key}`);
-    }
-  });
-};
-
-// Run validation on module load
-if (import.meta.env) {
-  validateEnv();
-}
-
+// Client-safe variables (NEXT_PUBLIC_ prefix)
 export const env: EnvConfig = {
-  walletConnectProjectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
-  contractAddress: import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`,
-  alchemyApiKey: import.meta.env.VITE_ALCHEMY_API_KEY || "",
-  alchemyNetwork: import.meta.env.VITE_ALCHEMY_NETWORK || "eth-sepolia",
-  useWebSocket: import.meta.env.VITE_USE_WEBSOCKET === "true",
-  alchemyWsUrl: import.meta.env.VITE_ALCHEMY_WS_SEPOLIA,
-  pinataJwt: import.meta.env.VITE_PINATA_JWT || "",
-  pinataGateway: import.meta.env.VITE_PINATA_GATEWAY || "https://ipfs.io/ipfs/",
+  walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "",
+  contractAddress: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "") as `0x${string}`,
+  rpcUrlSepolia: process.env.NEXT_PUBLIC_RPC_URL_SEPOLIA || "",
+  useWebSocket: process.env.NEXT_PUBLIC_USE_WEBSOCKET === "true",
 };
+
+// Validate required client environment variables
+if (typeof window !== "undefined") {
+  if (!env.walletConnectProjectId) {
+    throw new Error("Missing NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID");
+  }
+  if (!env.contractAddress) {
+    throw new Error("Missing NEXT_PUBLIC_CONTRACT_ADDRESS");
+  }
+}
 
 // Export individual values for convenience
 export const {
   walletConnectProjectId,
   contractAddress,
-  alchemyApiKey,
-  alchemyNetwork,
+  rpcUrlSepolia,
   useWebSocket,
-  alchemyWsUrl,
-  pinataJwt,
-  pinataGateway,
 } = env;

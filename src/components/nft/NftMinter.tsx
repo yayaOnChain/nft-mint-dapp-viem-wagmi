@@ -128,7 +128,7 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
   ]);
 
   // Calculations
-  const totalCost = mintPrice ? mintPrice * BigInt(quantity) : 0n;
+  const totalCost = mintPrice ? mintPrice * BigInt(quantity) : BigInt(0);
 
   const progressPercent =
     maxSupply && totalMinted

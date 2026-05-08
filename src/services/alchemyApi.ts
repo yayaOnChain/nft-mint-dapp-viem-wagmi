@@ -188,16 +188,22 @@ export class AlchemyApi {
   }
 }
 
-// Singleton instance with config from env
+// Singleton instance with config from env (server-side only)
 let alchemyApiInstance: AlchemyApi | null = null;
 
 export const getAlchemyApi = (): AlchemyApi => {
   if (!alchemyApiInstance) {
-    const apiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
-    const network = import.meta.env.VITE_ALCHEMY_NETWORK || "eth-sepolia";
+    // Server-side only - use process.env for server-side access
+    // For client-side, use getAlchemyClient from alchemyApiClient.ts instead
+    const apiKey = typeof window === 'undefined' 
+      ? process.env.ALCHEMY_API_KEY 
+      : undefined;
+    const network = typeof window === 'undefined'
+      ? process.env.ALCHEMY_NETWORK || "eth-sepolia"
+      : "eth-sepolia";
 
     if (!apiKey) {
-      throw new Error("Missing VITE_ALCHEMY_API_KEY environment variable");
+      throw new Error("Missing ALCHEMY_API_KEY environment variable (server-side only)");
     }
 
     alchemyApiInstance = new AlchemyApi({ apiKey, network });

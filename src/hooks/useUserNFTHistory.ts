@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount } from "wagmi";
 import type { UserNFT } from "@/types/nft";
-import { getAlchemyApi } from "@/services/alchemyApi";
+import { getAlchemyClient } from "@/services/alchemyApiClient";
 
 const INITIAL_PAGE_SIZE = 10;
 const LOAD_MORE_PAGE_SIZE = 10;
@@ -51,7 +51,7 @@ export const useUserNFTHistory = ({
       setError(null);
 
       try {
-        const alchemyApi = getAlchemyApi();
+        const alchemyApi = getAlchemyClient();
         const pageSize = append ? LOAD_MORE_PAGE_SIZE : INITIAL_PAGE_SIZE;
 
         const {

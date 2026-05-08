@@ -8,7 +8,7 @@ import type { TransactionHistoryItem, TransactionFilter } from "@/types";
 import { TransactionRowSkeleton } from "@/components/ui";
 import { contractAddress } from "@/config/env";
 import { CHAIN_IDS, UI_CONFIG, ERROR_MESSAGES } from "@/lib/constants";
-import { getAlchemyApi } from "@/services/alchemyApi";
+import { getAlchemyClient } from "@/services/alchemyApiClient";
 
 interface TransactionHistoryProps {
   refreshKey?: number; // Optional prop to trigger re-fetching transactions
@@ -59,7 +59,7 @@ export const TransactionHistory = ({
     setError(null);
 
     try {
-      const alchemyApi = getAlchemyApi();
+      const alchemyApi = getAlchemyClient();
       const limit = filter.limit || UI_CONFIG.pagination.defaultLimit;
 
       const { transfers, pageKey: newPageKey } =

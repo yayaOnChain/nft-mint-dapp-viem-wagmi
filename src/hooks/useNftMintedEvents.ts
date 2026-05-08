@@ -63,7 +63,7 @@ export const useNftMintedEvents = ({
           if (onNewMint) {
             onNewMint({
               ...newMint,
-              blockNumber: log.blockNumber || 0n,
+              blockNumber: log.blockNumber || BigInt(0),
             });
           }
         }

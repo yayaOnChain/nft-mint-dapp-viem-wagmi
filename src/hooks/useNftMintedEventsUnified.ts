@@ -1,6 +1,7 @@
 import { useNftMintedEvents } from "@/hooks/useNftMintedEvents"; // WebSocket version
 import { useNftMintedEventsPolling } from "@/hooks/useNftMintedEventsPolling"; // Polling version
 import type { NFTMintedEvent } from "@/hooks/useNftMintedEvents";
+import { useWebSocket } from "@/config/env";
 
 interface UseNftMintedEventsUnifiedProps {
   contractAddress: `0x${string}`;
@@ -18,8 +19,7 @@ export const useNftMintedEventsUnified = ({
   onNewMint,
 }: UseNftMintedEventsUnifiedProps) => {
   // Check if WebSocket endpoint is configured (via env variable)
-  const hasWebSocket =
-    import.meta.env.VITE_USE_WEBSOCKET === "true";
+  const hasWebSocket = useWebSocket;
 
   // Use both hooks and return the appropriate one based on environment
   // This ensures hooks are called in the same order on every render

@@ -162,7 +162,7 @@ describe('ContractService', () => {
         contractAddress: null,
         from: '0xfrom123456789012345678901234567890123456789',
         to: '0xto123456789012345678901234567890123456789',
-        transactionIndex: 0n,
+        transactionIndex: BigInt(0),
         type: 'eip1559' as const,
         blobGasUsed: undefined,
         blobGasPrice: undefined,

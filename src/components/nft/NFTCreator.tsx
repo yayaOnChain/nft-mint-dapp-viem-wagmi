@@ -17,7 +17,7 @@ import {
   CardContent,
 } from "@/components/ui";
 import { contractAddress } from "@/config/env";
-import { uploadNFTToIPFS } from "@/services/ipfsService";
+import { uploadNFTToIPFS } from "@/services/ipfsClient";
 import {
   createNFTMetadata,
   validateImageFile,
@@ -25,7 +25,6 @@ import {
   createImagePreview,
   revokeImagePreview,
 } from "@/utils/nftMetadata";
-import { pinataJwt } from "@/config/env";
 
 interface NFTCreatorProps {
   onMintSuccess?: () => void;
@@ -194,7 +193,7 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
       });
 
       // Upload to IPFS
-      const result = await uploadNFTToIPFS(imageToUpload, metadata, pinataJwt);
+      const result = await uploadNFTToIPFS(imageToUpload, metadata);
 
       setMetadataIpfsUrl(result.metadataUrl);
       setUploadProgress("Upload complete!");
@@ -273,7 +272,7 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
   }
 
   // Calculations
-  const totalCost = mintPrice ? mintPrice * BigInt(quantity) : 0n;
+  const totalCost = mintPrice ? mintPrice * BigInt(quantity) : BigInt(0);
 
   const progressPercent =
     maxSupply && totalMinted

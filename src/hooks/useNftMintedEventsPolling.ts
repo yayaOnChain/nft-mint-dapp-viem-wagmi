@@ -122,7 +122,7 @@ export const useNftMintedEventsPolling = ({
         // Calculate how many blocks need to be checked
         const blocksToCheck = Number(currentBlock) - Number(previousBlock);
 
-        let processedBlocks = 0n;
+        let processedBlocks = BigInt(0);
         const accumulatedLogs: NftMintedLog[] = [];
 
         // Split into chunks of maxRange (e.g., 10 blocks)
@@ -130,8 +130,8 @@ export const useNftMintedEventsPolling = ({
           const remaining = blocksToCheck - Number(processedBlocks);
           const currentRange = Math.min(maxRange, remaining);
 
-          const fromBlockNum = previousBlock + processedBlocks + 1n;
-          const toBlockNum = fromBlockNum + BigInt(currentRange) - 1n;
+          const fromBlockNum = previousBlock + processedBlocks + BigInt(1);
+          const toBlockNum = fromBlockNum + BigInt(currentRange) - BigInt(1);
 
           // Safe check to not go negative
           if (fromBlockNum > currentBlock) break;

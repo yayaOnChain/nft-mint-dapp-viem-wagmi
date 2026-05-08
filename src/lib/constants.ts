@@ -21,7 +21,7 @@ export const CONTRACT_CONFIG = {
   abi: myNftAbi,
   maxSupply: 1000,
   mintPrice: "0.01",
-  mintPriceWei: 10000000000000000n,
+  mintPriceWei: BigInt(10000000000000000),
   maxMintPerTransaction: 10,
   defaultMintQuantity: 1,
 } as const;

@@ -37,3 +37,6 @@ contract-address-*.json
 
 # Ignore generated typescript layout 
 *.d.ts
+
+# Ignore Next.js build output
+.next
