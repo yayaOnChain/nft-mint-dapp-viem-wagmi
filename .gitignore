@@ -40,3 +40,6 @@ contract-address-*.json
 
 # Ignore Next.js build output
 .next
+
+# Ignore Typescript build info
+*.tsbuildinfo
