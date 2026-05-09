@@ -2,8 +2,9 @@ import type {
   AlchemyNFTResponse,
   AlchemyTransferResponse,
   BlockResponse,
-  UserNFT,
 } from "@/types";
+import type { UserNFT } from "@/types/nft";
+import type { TransferredAsset } from "@/types/transaction";
 
 interface GetNFTsParams {
   owner: string;
@@ -21,6 +22,18 @@ interface GetAssetTransfersParams {
 
 const API_BASE = "/api/alchemy";
 
+const handleApiError = (error: unknown): never => {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as Record<string, unknown>).message === "string"
+  ) {
+    throw new Error((error as { message: string }).message);
+  }
+  throw new Error("Unknown API error");
+};
+
 export class AlchemyApiClient {
   async getNFTs(params: GetNFTsParams): Promise<{
     nfts: UserNFT[];
@@ -31,14 +44,14 @@ export class AlchemyApiClient {
 
     const url = new URL(API_BASE, window.location.origin);
     url.searchParams.set("method", "alchemy_getNFTs");
-    url.searchParams.set("params", JSON.stringify([
-      {
-        owner,
-        contractAddresses: contractAddress ? [contractAddress] : [],
-        pageSize,
-        ...(pageKey && { pageKey }),
-      }
-    ]));
+    url.searchParams.set("owner", owner);
+    if (contractAddress) {
+      url.searchParams.set("contractAddress", contractAddress);
+    }
+    url.searchParams.set("pageSize", pageSize.toString());
+    if (pageKey) {
+      url.searchParams.set("pageKey", pageKey);
+    }
 
     const response = await fetch(url.toString());
 
@@ -46,13 +59,13 @@ export class AlchemyApiClient {
       throw new Error(`Alchemy API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as AlchemyNFTResponse & { pageKey?: string; error?: { message: string } };
 
     if (data.error) {
-      throw new Error(data.error.message || data.error);
+      handleApiError(data.error);
     }
 
-    const nfts: UserNFT[] = data.result.ownedNfts.map((nft: any) => ({
+    const nfts: UserNFT[] = (data.ownedNfts || []).map((nft) => ({
       tokenId: nft.id.tokenId,
       contractAddress: nft.contract.address as `0x${string}`,
       tokenUri: nft.tokenUri?.gateway,
@@ -61,23 +74,15 @@ export class AlchemyApiClient {
 
     return {
       nfts,
-      totalCount: data.result.totalCount,
-      pageKey: data.result.pageKey,
+      totalCount: data.totalCount || 0,
+      pageKey: data.pageKey,
     };
   }
 
   async getAssetTransfers(
     params: GetAssetTransfersParams,
   ): Promise<{
-    transfers: Array<{
-      tokenId: string;
-      txHash: `0x${string}`;
-      timestamp: number;
-      blockNum: string;
-      from: `0x${string}`;
-      to: `0x${string}`;
-      type: string;
-    }>;
+    transfers: TransferredAsset[];
     pageKey?: string;
   }> {
     const { address, contractAddress, limit, pageKey } = params;
@@ -101,13 +106,13 @@ export class AlchemyApiClient {
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json() as AlchemyTransferResponse & { error?: { message: string } };
 
     if (data.error) {
-      throw new Error(data.error.message || data.error);
+      handleApiError(data.error);
     }
 
-    const transfers = data.result.transfers.map((tx: any) => {
+    const transfers: TransferredAsset[] = data.result.transfers.map((tx) => {
       let timestamp = 0;
       if (tx.blockTimestamp) {
         const isoTime = Date.parse(tx.blockTimestamp);
@@ -145,10 +150,10 @@ export class AlchemyApiClient {
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json() as BlockResponse & { error?: { message: string } };
 
     if (data.error) {
-      throw new Error(data.error.message || data.error);
+      handleApiError(data.error);
     }
 
     return parseInt(data.result.timestamp, 16) * 1000;
