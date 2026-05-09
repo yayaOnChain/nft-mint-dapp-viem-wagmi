@@ -1,8 +1,8 @@
 /// <reference types="@nomicfoundation/hardhat-ethers" />
 /// <reference types="@nomicfoundation/hardhat-chai-matchers" />
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import type { MyNFT } from "typechain-types"; // Auto-generated types
+import hre from "hardhat";
+import type { MyNFT } from "typechain-types";
 import type { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("MyNFT Contract", function () {
@@ -12,11 +12,11 @@ describe("MyNFT Contract", function () {
 
   beforeEach(async function () {
     // Get signers from the hardhat environment
-    const signers = await ethers.getSigners();
+    const signers = await hre.ethers.getSigners();
     [owner, addr1] = signers;
 
     // Deploy the contract before each test
-    const MyNFTFactory = await ethers.getContractFactory("MyNFT");
+    const MyNFTFactory = await hre.ethers.getContractFactory("MyNFT");
     myNFT = (await MyNFTFactory.deploy(owner.address, "")) as MyNFT;
     await myNFT.waitForDeployment();
   });
@@ -36,7 +36,7 @@ describe("MyNFT Contract", function () {
   });
 
   it("Should fail if insufficient ETH is sent", async function () {
-    const insufficientPrice = ethers.parseEther("0.005"); // Less than 0.01
+    const insufficientPrice = hre.ethers.parseEther("0.005"); // Less than 0.01
 
     await expect(
       myNFT.connect(addr1).mint(1, { value: insufficientPrice }),
@@ -47,12 +47,12 @@ describe("MyNFT Contract", function () {
     const mintPrice = await myNFT.MINT_PRICE();
     await myNFT.connect(addr1).mint(1, { value: mintPrice });
 
-    const initialBalance = await ethers.provider.getBalance(owner.address);
+    const initialBalance = await hre.ethers.provider.getBalance(owner.address);
 
     // Withdraw funds
     await myNFT.withdraw();
 
-    const finalBalance = await ethers.provider.getBalance(owner.address);
+    const finalBalance = await hre.ethers.provider.getBalance(owner.address);
 
     // Balance should increase (minus gas fees roughly)
     expect(finalBalance).to.be.greaterThan(initialBalance);
@@ -60,7 +60,7 @@ describe("MyNFT Contract", function () {
 
   describe("Metadata Management", function () {
     it("Should set base URI during deployment", async function () {
-      const MyNFTFactory = await ethers.getContractFactory("MyNFT");
+      const MyNFTFactory = await hre.ethers.getContractFactory("MyNFT");
       const testBaseURI = "https://ipfs.io/ipfs/QmTest123/";
       const nftWithURI = await MyNFTFactory.deploy(owner.address, testBaseURI);
       await nftWithURI.waitForDeployment();
@@ -93,7 +93,7 @@ describe("MyNFT Contract", function () {
     });
 
     it("Should return correct tokenURI after minting with base URI", async function () {
-      const MyNFTFactory = await ethers.getContractFactory("MyNFT");
+      const MyNFTFactory = await hre.ethers.getContractFactory("MyNFT");
       const baseURI = "https://ipfs.io/ipfs/QmTest/";
       const nftWithURI = await MyNFTFactory.deploy(owner.address, baseURI);
       await nftWithURI.waitForDeployment();

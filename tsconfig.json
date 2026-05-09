@@ -40,7 +40,8 @@
       "@/abi": ["./src/abi"],
       "@/abi/*": ["./src/abi/*"],
       "@/services": ["./src/app/lib/services"],
-      "@/services/*": ["./src/app/lib/services/*"]
+      "@/services/*": ["./src/app/lib/services/*"],
+      "typechain-types": ["./typechain-types"]
     }
   },
   "include": [
@@ -52,7 +53,6 @@
   ],
   "exclude": [
     "node_modules",
-    "src/contracts",
     "src/scripts",
     "src/test"
   ]
