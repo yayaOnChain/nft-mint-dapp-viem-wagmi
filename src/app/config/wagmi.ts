@@ -1,7 +1,7 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { http } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
-import { walletConnectProjectId, useWebSocket } from "@/config/env";
+import { walletConnectProjectId } from "@/config/env";
 
 /**
  * Wagmi configuration for Next.js

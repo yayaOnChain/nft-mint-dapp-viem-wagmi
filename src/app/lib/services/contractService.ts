@@ -51,7 +51,7 @@ export class ContractService {
       abi,
       functionName,
       args,
-    } as const);
+    } as unknown as Parameters<typeof readContract>[1]);
   }
 
   /**
@@ -65,8 +65,8 @@ export class ContractService {
       abi,
       functionName,
       args,
-      value,
-    } as const);
+      ...(value !== undefined && { value }),
+    } as unknown as Parameters<typeof wagmiWriteContract>[1]);
   }
 
   /**

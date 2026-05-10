@@ -153,9 +153,9 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
       address: contractAddress,
       abi: myNftAbi,
       functionName: "mint",
-      args: [BigInt(quantity)], // quantity as uint256
-      value: totalCost, // Send ETH equal to MINT_PRICE * quantity
-    });
+      args: [BigInt(quantity)],
+      value: totalCost,
+    } as unknown as Parameters<typeof writeContract>[0]);
   };
 
   if (!isConnected) {

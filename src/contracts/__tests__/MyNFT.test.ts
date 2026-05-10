@@ -17,7 +17,7 @@ describe("MyNFT Contract", function () {
 
     // Deploy the contract before each test
     const MyNFTFactory = await hre.ethers.getContractFactory("MyNFT");
-    myNFT = (await MyNFTFactory.deploy(owner.address, "")) as MyNFT;
+    myNFT = (await MyNFTFactory.deploy(owner.address, "")) as unknown as MyNFT;
     await myNFT.waitForDeployment();
   });
 
@@ -62,7 +62,7 @@ describe("MyNFT Contract", function () {
     it("Should set base URI during deployment", async function () {
       const MyNFTFactory = await hre.ethers.getContractFactory("MyNFT");
       const testBaseURI = "https://ipfs.io/ipfs/QmTest123/";
-      const nftWithURI = await MyNFTFactory.deploy(owner.address, testBaseURI);
+      const nftWithURI = (await MyNFTFactory.deploy(owner.address, testBaseURI)) as unknown as MyNFT;
       await nftWithURI.waitForDeployment();
 
       expect(await nftWithURI.baseTokenURI()).to.equal(testBaseURI);
@@ -95,7 +95,7 @@ describe("MyNFT Contract", function () {
     it("Should return correct tokenURI after minting with base URI", async function () {
       const MyNFTFactory = await hre.ethers.getContractFactory("MyNFT");
       const baseURI = "https://ipfs.io/ipfs/QmTest/";
-      const nftWithURI = await MyNFTFactory.deploy(owner.address, baseURI);
+      const nftWithURI = (await MyNFTFactory.deploy(owner.address, baseURI)) as unknown as MyNFT;
       await nftWithURI.waitForDeployment();
 
       const mintPrice = await nftWithURI.MINT_PRICE();

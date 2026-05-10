@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2020",
     "lib": [
       "dom",
       "dom.iterable",
@@ -22,6 +22,7 @@
         "name": "next"
       }
     ],
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
     "paths": {
       "@/components": ["./src/app/components"],
       "@/components/*": ["./src/app/components/*"],
@@ -39,15 +40,16 @@
       "@/providers/*": ["./src/app/providers/*"],
       "@/abi": ["./src/abi"],
       "@/abi/*": ["./src/abi/*"],
-      "@/services": ["./src/app/lib/services"],
       "@/services/*": ["./src/app/lib/services/*"],
+      "@/services": ["./src/app/lib/services"],
+      "@/test/*": ["./src/test/*"],
       "typechain-types": ["./typechain-types"]
     }
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],

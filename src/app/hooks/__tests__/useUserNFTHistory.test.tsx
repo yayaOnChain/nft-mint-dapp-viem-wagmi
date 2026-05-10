@@ -1,13 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { useUserNFTHistory } from '@/hooks/useUserNFTHistory';
-import * as wagmi from 'wagmi';
-import {
-  AlchemyApi,
-  setAlchemyApiInstance,
-  resetAlchemyApiInstance,
-} from '@/services/alchemyApi';
-import { createConfig, http, useAccount } from 'wagmi';
+import { createConfig, http } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
@@ -24,6 +17,33 @@ const generateMockNFTs = (count: number) => {
 };
 
 const mockUserNFTs = generateMockNFTs(3);
+
+// Mock the hooks and services
+const mockUseAccount = vi.fn();
+const mockAlchemyApiInstance = {
+  getNFTs: vi.fn(),
+};
+
+// Mock wagmi module
+vi.mock('wagmi', async () => {
+  const actual = await vi.importActual('wagmi');
+  return {
+    ...actual,
+    useAccount: () => mockUseAccount(),
+  };
+});
+
+// Mock the AlchemyApiClient
+vi.mock('@/lib/services/alchemyApiClient', () => ({
+  getAlchemyClient: vi.fn(() => mockAlchemyApiInstance),
+  AlchemyApiClient: vi.fn(),
+  setAlchemyClientInstance: vi.fn(),
+  resetAlchemyClientInstance: vi.fn(),
+}));
+
+// Import after mocks
+// import { getAlchemyClient } from '@/lib/services/alchemyApiClient';
+import { useUserNFTHistory } from '@/hooks/useUserNFTHistory';
 
 // Create test providers
 const createTestWrapper = () => {
@@ -50,39 +70,28 @@ const createTestWrapper = () => {
 };
 
 describe('useUserNFTHistory', () => {
-  let mockAlchemyApi: AlchemyApi;
   let wrapper: React.ComponentType<PropsWithChildren>;
-  let useAccountSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    // Mock useAccount hook
-    useAccountSpy = vi.spyOn(wagmi, 'useAccount').mockReturnValue({
+    vi.clearAllMocks();
+    mockUseAccount.mockReturnValue({
       address: '0xUserAddress123456789012345678901234567890' as `0x${string}`,
       isConnected: true,
       chain: sepolia,
-    } as unknown as ReturnType<typeof useAccount>);
-
-    mockAlchemyApi = new AlchemyApi({
-      apiKey: 'test-key',
-      network: 'eth-sepolia',
     });
-    setAlchemyApiInstance(mockAlchemyApi);
+    mockAlchemyApiInstance.getNFTs.mockResolvedValue({
+      nfts: mockUserNFTs,
+      totalCount: mockUserNFTs.length,
+    });
     wrapper = createTestWrapper();
   });
 
   afterEach(() => {
-    resetAlchemyApiInstance();
-    useAccountSpy.mockRestore();
     vi.restoreAllMocks();
   });
 
   describe('initial load', () => {
     it('should fetch NFTs on mount', async () => {
-      const getNFTsMock = vi.spyOn(mockAlchemyApi, 'getNFTs').mockResolvedValue({
-        nfts: mockUserNFTs,
-        totalCount: mockUserNFTs.length,
-      });
-
       const { result } = renderHook(() => useUserNFTHistory(), {
         wrapper,
       });
@@ -91,7 +100,7 @@ describe('useUserNFTHistory', () => {
         expect(result.current.nfts).toHaveLength(mockUserNFTs.length);
       });
 
-      expect(getNFTsMock).toHaveBeenCalledWith({
+      expect(mockAlchemyApiInstance.getNFTs).toHaveBeenCalledWith({
         owner: '0xUserAddress123456789012345678901234567890',
         contractAddress: undefined,
         pageSize: 10,
@@ -100,11 +109,6 @@ describe('useUserNFTHistory', () => {
     });
 
     it('should use contractAddress filter when provided', async () => {
-      const getNFTsMock = vi.spyOn(mockAlchemyApi, 'getNFTs').mockResolvedValue({
-        nfts: mockUserNFTs,
-        totalCount: mockUserNFTs.length,
-      });
-
       const contractAddress = '0x1234567890123456789012345678901234567890';
 
       renderHook(
@@ -116,7 +120,7 @@ describe('useUserNFTHistory', () => {
       );
 
       await waitFor(() => {
-        expect(getNFTsMock).toHaveBeenCalledWith(
+        expect(mockAlchemyApiInstance.getNFTs).toHaveBeenCalledWith(
           expect.objectContaining({
             contractAddress,
           }),
@@ -125,7 +129,7 @@ describe('useUserNFTHistory', () => {
     });
 
     it('should handle empty NFT list', async () => {
-      vi.spyOn(mockAlchemyApi, 'getNFTs').mockResolvedValue({
+      mockAlchemyApiInstance.getNFTs.mockResolvedValue({
         nfts: [],
         totalCount: 0,
       });
@@ -139,9 +143,7 @@ describe('useUserNFTHistory', () => {
     });
 
     it('should handle API error', async () => {
-      vi.spyOn(mockAlchemyApi, 'getNFTs').mockRejectedValue(
-        new Error('API Error'),
-      );
+      mockAlchemyApiInstance.getNFTs.mockRejectedValue(new Error('API Error'));
 
       const { result } = renderHook(() => useUserNFTHistory(), { wrapper });
 
@@ -154,7 +156,7 @@ describe('useUserNFTHistory', () => {
   describe('pagination', () => {
     it('should load initial NFTs (up to 10)', async () => {
       const initialNFTs = generateMockNFTs(10);
-      vi.spyOn(mockAlchemyApi, 'getNFTs').mockResolvedValue({
+      mockAlchemyApiInstance.getNFTs.mockResolvedValue({
         nfts: initialNFTs,
         totalCount: 25,
         pageKey: 'page-2-key',
@@ -172,7 +174,7 @@ describe('useUserNFTHistory', () => {
       const initialNFTs = generateMockNFTs(10);
       const moreNFTs = generateMockNFTs(15);
 
-      vi.spyOn(mockAlchemyApi, 'getNFTs')
+      mockAlchemyApiInstance.getNFTs
         .mockResolvedValueOnce({
           nfts: initialNFTs,
           totalCount: 25,
@@ -198,8 +200,8 @@ describe('useUserNFTHistory', () => {
         expect(result.current.nfts).toHaveLength(25);
       });
 
-      expect(mockAlchemyApi.getNFTs).toHaveBeenCalledTimes(2);
-      expect(mockAlchemyApi.getNFTs).toHaveBeenNthCalledWith(2, {
+      expect(mockAlchemyApiInstance.getNFTs).toHaveBeenCalledTimes(2);
+      expect(mockAlchemyApiInstance.getNFTs).toHaveBeenNthCalledWith(2, {
         owner: '0xUserAddress123456789012345678901234567890',
         contractAddress: undefined,
         pageSize: 10,
@@ -208,7 +210,7 @@ describe('useUserNFTHistory', () => {
     });
 
     it('should set hasMore to false when no more pageKey', async () => {
-      vi.spyOn(mockAlchemyApi, 'getNFTs').mockResolvedValue({
+      mockAlchemyApiInstance.getNFTs.mockResolvedValue({
         nfts: mockUserNFTs,
         totalCount: mockUserNFTs.length,
         pageKey: undefined,
@@ -222,7 +224,7 @@ describe('useUserNFTHistory', () => {
     });
 
     it('should not load more when hasMore is false', async () => {
-      vi.spyOn(mockAlchemyApi, 'getNFTs').mockResolvedValue({
+      mockAlchemyApiInstance.getNFTs.mockResolvedValue({
         nfts: mockUserNFTs,
         totalCount: mockUserNFTs.length,
         pageKey: undefined,
@@ -238,18 +240,17 @@ describe('useUserNFTHistory', () => {
         await result.current.loadMore();
       });
 
-      expect(mockAlchemyApi.getNFTs).toHaveBeenCalledTimes(1);
+      expect(mockAlchemyApiInstance.getNFTs).toHaveBeenCalledTimes(1);
     });
 
     it('should not load more when already loading', async () => {
       const initialNFTs = generateMockNFTs(10);
       let resolveLoad: (value: unknown) => void;
-      const loadPromise = new Promise((resolve) => {
-        resolveLoad = resolve;
-      });
 
-      vi.spyOn(mockAlchemyApi, 'getNFTs').mockImplementation(() => {
-        return loadPromise as Promise<{ nfts: never[]; totalCount: number; pageKey?: string }>;
+      mockAlchemyApiInstance.getNFTs.mockImplementation(() => {
+        return new Promise((resolve) => {
+          resolveLoad = resolve;
+        }) as ReturnType<typeof mockAlchemyApiInstance.getNFTs>;
       });
 
       const { result } = renderHook(() => useUserNFTHistory(), { wrapper });
@@ -258,7 +259,6 @@ describe('useUserNFTHistory', () => {
         expect(result.current.isLoading).toBe(true);
       });
 
-      // Call loadMore twice rapidly while first load is pending
       await act(async () => {
         const loadMorePromise1 = result.current.loadMore();
         const loadMorePromise2 = result.current.loadMore();
@@ -266,34 +266,26 @@ describe('useUserNFTHistory', () => {
         await Promise.all([loadMorePromise1, loadMorePromise2]);
       });
 
-      // Wait for isLoading to be false after the fetch completes
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Should only have called getNFTs once (initial load)
-      // The loadMore calls should be ignored because isLoading was true and hasMore was false
-      expect(mockAlchemyApi.getNFTs).toHaveBeenCalledTimes(1);
+      expect(mockAlchemyApiInstance.getNFTs).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('loading state', () => {
     it('should set isLoading to true during fetch', async () => {
       let resolvePromise: (value: unknown) => void;
-      const promise = new Promise((resolve) => {
-        resolvePromise = resolve;
-      });
 
-      vi.spyOn(mockAlchemyApi, 'getNFTs').mockImplementation(
-        () => promise as Promise<{ nfts: never[]; totalCount: number }>,
+      mockAlchemyApiInstance.getNFTs.mockImplementation(
+        () => new Promise((resolve) => { resolvePromise = resolve; }) as ReturnType<typeof mockAlchemyApiInstance.getNFTs>
       );
 
       const { result } = renderHook(() => useUserNFTHistory(), { wrapper });
 
-      // Should be loading initially
       expect(result.current.isLoading).toBe(true);
 
-      // Resolve the promise
       act(() => {
         resolvePromise!({ nfts: [], totalCount: 0 });
       });
@@ -306,19 +298,16 @@ describe('useUserNFTHistory', () => {
 
   describe('disconnected state', () => {
     it('should not fetch NFTs when not connected', async () => {
-      // Mock disconnected state
-      useAccountSpy.mockReturnValue({
+      mockUseAccount.mockReturnValue({
         address: undefined,
         isConnected: false,
         chain: undefined,
       });
 
-      const getNFTsMock = vi.spyOn(mockAlchemyApi, 'getNFTs');
-
       renderHook(() => useUserNFTHistory(), { wrapper });
 
       await waitFor(() => {
-        expect(getNFTsMock).not.toHaveBeenCalled();
+        expect(mockAlchemyApiInstance.getNFTs).not.toHaveBeenCalled();
       });
     });
   });
@@ -329,17 +318,14 @@ describe('useUserNFTHistory', () => {
       const mockNFTs2 = generateMockNFTs(5);
       let callCount = 0;
 
-      const getNFTsMock = vi
-        .spyOn(mockAlchemyApi, 'getNFTs')
-        .mockImplementation(async () => {
-          callCount++;
-          return {
-            nfts: callCount === 1 ? mockNFTs1 : mockNFTs2,
-            totalCount: 5,
-          };
-        });
+      mockAlchemyApiInstance.getNFTs.mockImplementation(async () => {
+        callCount++;
+        return {
+          nfts: callCount === 1 ? mockNFTs1 : mockNFTs2,
+          totalCount: 5,
+        };
+      });
 
-      // Create a new wrapper with isolated query client for this test
       const queryClient = new QueryClient({
         defaultOptions: {
           queries: {
@@ -361,7 +347,6 @@ describe('useUserNFTHistory', () => {
         </WagmiProvider>
       );
 
-      // Initial render with refreshKey 0
       const { result, rerender } = renderHook(
         ({ refreshKey }) => useUserNFTHistory({ refreshKey }),
         {
@@ -370,7 +355,6 @@ describe('useUserNFTHistory', () => {
         },
       );
 
-      // Wait for initial fetch
       await waitFor(
         () => {
           expect(result.current.nfts).toHaveLength(5);
@@ -378,20 +362,17 @@ describe('useUserNFTHistory', () => {
         { timeout: 3000 },
       );
 
-      expect(getNFTsMock).toHaveBeenCalledTimes(1);
+      expect(mockAlchemyApiInstance.getNFTs).toHaveBeenCalledTimes(1);
 
-      // Change refresh key to trigger refetch
       rerender({ refreshKey: 1 });
 
-      // Wait for refetch to complete
       await waitFor(
         () => {
-          expect(getNFTsMock).toHaveBeenCalledTimes(2);
+          expect(mockAlchemyApiInstance.getNFTs).toHaveBeenCalledTimes(2);
         },
         { timeout: 3000 },
       );
 
-      // Verify data was refetched
       await waitFor(
         () => {
           expect(result.current.nfts).toHaveLength(5);

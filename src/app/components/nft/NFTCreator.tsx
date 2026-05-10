@@ -236,7 +236,7 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
       functionName: "mint",
       args: [BigInt(quantity)],
       value: totalCost,
-    });
+    } as unknown as Parameters<typeof writeContract>[0]);
   };
 
   // Reset write contract state on error

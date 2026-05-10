@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         gatewayUrl: `${PINATA_GATEWAY}${data.IpfsHash}`
       });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to upload to IPFS' },
       { status: 500 }

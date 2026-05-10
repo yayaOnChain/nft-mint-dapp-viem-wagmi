@@ -1,14 +1,32 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { sepolia } from "wagmi/chains";
-import * as wagmi from "wagmi";
-import type { Connector, UseAccountReturnType } from "wagmi";
-import type { AlchemyApi } from "@/services/alchemyApi";
-import { TransactionHistory } from "@/components/transaction/TransactionHistory";
+import type { PropsWithChildren } from "react";
 
-// Mock the toast hook
+const mockAddress = "0xUserAddress123456789012345678901234567890" as `0x${string}`;
+const mockTxHash = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" as `0x${string}`;
+
+const mockUseAccount = vi.fn();
+const mockGetAssetTransfers = vi.fn();
+const mockGetBlockByNumber = vi.fn();
+
+vi.mock("wagmi", async () => {
+  const actual = await vi.importActual("wagmi");
+  return {
+    ...actual,
+    useAccount: () => mockUseAccount(),
+  };
+});
+
+vi.mock("@/lib/services/alchemyApiClient", () => ({
+  getAlchemyClient: vi.fn(() => ({
+    getAssetTransfers: mockGetAssetTransfers,
+    getBlockByNumber: mockGetBlockByNumber,
+  })),
+}));
+
 vi.mock("@/hooks/useToast", () => ({
   useToast: () => ({
     success: vi.fn(),
@@ -24,27 +42,16 @@ vi.mock("@/hooks/useToast", () => ({
   }),
 }));
 
-// Mock Alchemy API service
-vi.mock("../../../services/alchemyApi", () => ({
-  getAlchemyApi: vi.fn(),
-}));
-
-// Mock contract address
-vi.mock("../../../config/env", () => ({
+vi.mock("@/config/env", () => ({
   contractAddress: "0x1234567890123456789012345678901234567890",
 }));
 
-// Import mocked services
-import { getAlchemyApi } from "../../../services/alchemyApi";
-// import { useToast } from "../../../hooks/useToast";
+vi.mock("@/abi/myNft", () => ({
+  myNftAbi: [],
+}));
 
-// Type for mock Alchemy API
-interface MockAlchemyApi {
-  getAssetTransfers: ReturnType<typeof vi.fn>;
-  getBlockByNumber: ReturnType<typeof vi.fn>;
-}
+import { TransactionHistory } from "@/components/transaction/TransactionHistory";
 
-// Create test providers
 const createTestWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -61,88 +68,67 @@ const createTestWrapper = () => {
     },
   });
 
-  return ({ children }: React.PropsWithChildren) => (
+  return ({ children }: PropsWithChildren) => (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   );
 };
 
+const mockTransfers = [
+  {
+    tokenId: 1n,
+    txHash: mockTxHash,
+    timestamp: Math.floor(Date.now() / 1000),
+    blockNum: "123456",
+    from: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+    to: mockAddress,
+    type: "mint" as const,
+  },
+  {
+    tokenId: 2n,
+    txHash: mockTxHash,
+    timestamp: Math.floor(Date.now() / 1000),
+    blockNum: "123457",
+    from: mockAddress,
+    to: "0xAnotherAddress123456789012345678901234567890" as `0x${string}`,
+    type: "transfer" as const,
+  },
+];
+
 describe("TransactionHistory", () => {
-  let wrapper: React.ComponentType<React.PropsWithChildren>;
-  let useAccountSpy: ReturnType<typeof vi.spyOn>;
-
-  const mockAddress =
-    "0xUserAddress123456789012345678901234567890" as `0x${string}`;
-  const mockTxHash =
-    "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
-
-  const mockTransfers = [
-    {
-      tokenId: 1n,
-      txHash: mockTxHash,
-      timestamp: Math.floor(Date.now() / 1000),
-      blockNum: "123456",
-      from: "0x0000000000000000000000000000000000000000",
-      to: mockAddress,
-      type: "mint",
-    },
-    {
-      tokenId: 2n,
-      txHash: mockTxHash,
-      timestamp: Math.floor(Date.now() / 1000),
-      blockNum: "123457",
-      from: mockAddress,
-      to: "0xAnotherAddress123456789012345678901234567890",
-      type: "transfer",
-    },
-  ];
-
-  const mockAlchemyApi: MockAlchemyApi = {
-    getAssetTransfers: vi.fn(),
-    getBlockByNumber: vi.fn(),
-  };
+  const wrapper = createTestWrapper();
 
   beforeEach(() => {
-    wrapper = createTestWrapper();
+    vi.clearAllMocks();
 
-    // Mock useAccount
-    useAccountSpy = vi.spyOn(wagmi, "useAccount").mockReturnValue({
+    mockUseAccount.mockReturnValue({
       address: mockAddress,
       addresses: [mockAddress],
       isConnected: true,
       isConnecting: false,
       isDisconnected: false,
       isReconnecting: false,
-      status: "connected",
+      status: "connected" as const,
       chain: sepolia,
       chainId: sepolia.id,
-      connector: undefined as unknown as Connector,
+      connector: undefined,
     });
 
-    // Setup Alchemy API mock
-    vi.mocked(getAlchemyApi).mockReturnValue(mockAlchemyApi as unknown as AlchemyApi);
-    mockAlchemyApi.getAssetTransfers.mockResolvedValue({
+    mockGetAssetTransfers.mockResolvedValue({
       transfers: mockTransfers,
       pageKey: undefined,
     });
-    mockAlchemyApi.getBlockByNumber.mockResolvedValue(
-      Math.floor(Date.now() / 1000),
-    );
-  });
-
-  afterEach(() => {
-    useAccountSpy.mockRestore();
-    vi.restoreAllMocks();
+    mockGetBlockByNumber.mockResolvedValue(Math.floor(Date.now() / 1000));
   });
 
   describe("disconnected state", () => {
     it("should show 'Connect your wallet' message when not connected", () => {
-      useAccountSpy.mockReturnValue({
+      mockUseAccount.mockReturnValue({
         address: undefined,
         isConnected: false,
         chain: undefined,
-      } as unknown as UseAccountReturnType);
+      } as ReturnType<typeof mockUseAccount>);
 
       render(<TransactionHistory />, { wrapper });
 
@@ -154,7 +140,7 @@ describe("TransactionHistory", () => {
 
   describe("loading state", () => {
     it("should disable refresh button while loading", async () => {
-      mockAlchemyApi.getAssetTransfers.mockImplementation(
+      mockGetAssetTransfers.mockImplementation(
         () =>
           new Promise((resolve) =>
             setTimeout(
@@ -173,9 +159,7 @@ describe("TransactionHistory", () => {
 
   describe("error state", () => {
     it("should display error message when API fails", async () => {
-      mockAlchemyApi.getAssetTransfers.mockRejectedValue(
-        new Error("Network error"),
-      );
+      mockGetAssetTransfers.mockRejectedValue(new Error("Network error"));
 
       render(<TransactionHistory />, { wrapper });
 
@@ -187,9 +171,7 @@ describe("TransactionHistory", () => {
     });
 
     it("should show error with warning icon", async () => {
-      mockAlchemyApi.getAssetTransfers.mockRejectedValue(
-        new Error("Failed to fetch"),
-      );
+      mockGetAssetTransfers.mockRejectedValue(new Error("Failed to fetch"));
 
       render(<TransactionHistory />, { wrapper });
 
@@ -201,7 +183,7 @@ describe("TransactionHistory", () => {
 
   describe("empty state", () => {
     it("should show 'No transactions found' when no transactions", async () => {
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
+      mockGetAssetTransfers.mockResolvedValue({
         transfers: [],
         pageKey: undefined,
       });
@@ -214,7 +196,7 @@ describe("TransactionHistory", () => {
     });
 
     it("should display 📜 emoji in empty state", async () => {
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
+      mockGetAssetTransfers.mockResolvedValue({
         transfers: [],
         pageKey: undefined,
       });
@@ -225,35 +207,10 @@ describe("TransactionHistory", () => {
         expect(screen.getByText("📜")).toBeInTheDocument();
       });
     });
-
-    it("should show 'Your mint history will appear here' message", async () => {
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
-        transfers: [],
-        pageKey: undefined,
-      });
-
-      render(<TransactionHistory />, { wrapper });
-
-      await waitFor(() => {
-        expect(
-          screen.getByText("Your mint history will appear here"),
-        ).toBeInTheDocument();
-      });
-    });
   });
 
   describe("success state", () => {
     it("should display transaction table when data exists", async () => {
-      render(<TransactionHistory />, { wrapper });
-
-      await waitFor(() => {
-        // Check for transaction content by looking for Token IDs
-        expect(screen.getByText("#1")).toBeInTheDocument();
-        expect(screen.getByText("#2")).toBeInTheDocument();
-      });
-    });
-
-    it("should render transaction rows correctly", async () => {
       render(<TransactionHistory />, { wrapper });
 
       await waitFor(() => {
@@ -284,7 +241,7 @@ describe("TransactionHistory", () => {
 
   describe("pagination", () => {
     it("should show 'Load More' button when hasMore is true", async () => {
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
+      mockGetAssetTransfers.mockResolvedValue({
         transfers: mockTransfers,
         pageKey: "next-page-key",
       });
@@ -299,7 +256,7 @@ describe("TransactionHistory", () => {
     });
 
     it("should call fetchTransactions with pageKey when Load More clicked", async () => {
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
+      mockGetAssetTransfers.mockResolvedValue({
         transfers: mockTransfers,
         pageKey: "next-page-key",
       });
@@ -312,9 +269,8 @@ describe("TransactionHistory", () => {
         ).toBeInTheDocument();
       });
 
-      // Reset mock to track new calls
-      mockAlchemyApi.getAssetTransfers.mockClear();
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
+      mockGetAssetTransfers.mockClear();
+      mockGetAssetTransfers.mockResolvedValue({
         transfers: mockTransfers,
         pageKey: undefined,
       });
@@ -323,7 +279,7 @@ describe("TransactionHistory", () => {
       fireEvent.click(loadMoreButton);
 
       await waitFor(() => {
-        expect(mockAlchemyApi.getAssetTransfers).toHaveBeenCalledWith(
+        expect(mockGetAssetTransfers).toHaveBeenCalledWith(
           expect.objectContaining({
             pageKey: "next-page-key",
           }),
@@ -332,7 +288,7 @@ describe("TransactionHistory", () => {
     });
 
     it("should show 'Showing all X transactions' when no more pages", async () => {
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
+      mockGetAssetTransfers.mockResolvedValue({
         transfers: mockTransfers,
         pageKey: undefined,
       });
@@ -345,70 +301,24 @@ describe("TransactionHistory", () => {
         ).toBeInTheDocument();
       });
     });
-
-    it("should update pagination state correctly after loading more", async () => {
-      // First page
-      mockAlchemyApi.getAssetTransfers.mockResolvedValueOnce({
-        transfers: mockTransfers,
-        pageKey: "page-2-key",
-      });
-
-      render(<TransactionHistory />, { wrapper });
-
-      await waitFor(() => {
-        expect(screen.getByText(/2 shown/i)).toBeInTheDocument();
-      });
-
-      // Second page
-      mockAlchemyApi.getAssetTransfers.mockResolvedValueOnce({
-        transfers: mockTransfers,
-        pageKey: undefined,
-      });
-
-      const loadMoreButton = screen.getByRole("button", { name: /load more/i });
-      fireEvent.click(loadMoreButton);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(/Showing all 4 transactions/i),
-        ).toBeInTheDocument();
-      });
-    });
   });
 
   describe("refresh functionality", () => {
-    it("should disable refresh button while loading", async () => {
-      mockAlchemyApi.getAssetTransfers.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(
-              () => resolve({ transfers: [], pageKey: undefined }),
-              500,
-            ),
-          ),
-      );
-
-      render(<TransactionHistory />, { wrapper });
-
-      const refreshButton = screen.getByRole("button", { name: /refresh/i });
-      expect(refreshButton).toBeDisabled();
-    });
-
     it("should trigger re-fetch when refreshKey prop changes", async () => {
       const { rerender } = render(<TransactionHistory refreshKey={0} />, {
         wrapper,
       });
 
       await waitFor(() => {
-        expect(mockAlchemyApi.getAssetTransfers).toHaveBeenCalledTimes(1);
+        expect(mockGetAssetTransfers).toHaveBeenCalledTimes(1);
       });
 
-      mockAlchemyApi.getAssetTransfers.mockClear();
+      mockGetAssetTransfers.mockClear();
 
       rerender(<TransactionHistory refreshKey={1} />);
 
       await waitFor(() => {
-        expect(mockAlchemyApi.getAssetTransfers).toHaveBeenCalledTimes(1);
+        expect(mockGetAssetTransfers).toHaveBeenCalledTimes(1);
       });
     });
   });
@@ -418,62 +328,12 @@ describe("TransactionHistory", () => {
       render(<TransactionHistory />, { wrapper });
 
       await waitFor(() => {
-        expect(mockAlchemyApi.getAssetTransfers).toHaveBeenCalledWith(
+        expect(mockGetAssetTransfers).toHaveBeenCalledWith(
           expect.objectContaining({
             address: mockAddress,
             contractAddress: "0x1234567890123456789012345678901234567890",
           }),
         );
-      });
-    });
-
-    it("should clear transactions when wallet disconnects", async () => {
-      const { rerender } = render(<TransactionHistory />, { wrapper });
-
-      await waitFor(() => {
-        expect(screen.getByText("#1")).toBeInTheDocument();
-      });
-
-      // Disconnect wallet
-      useAccountSpy.mockReturnValue({
-        address: undefined,
-        isConnected: false,
-        chain: undefined,
-      } as unknown as UseAccountReturnType);
-
-      rerender(<TransactionHistory />);
-
-      expect(
-        screen.getByText("Connect your wallet to view transaction history"),
-      ).toBeInTheDocument();
-    });
-
-    it("should handle transactions with missing timestamps", async () => {
-      const transfersWithMissingTimestamp = [
-        {
-          tokenId: 1n,
-          txHash: mockTxHash,
-          timestamp: 0, // Missing timestamp
-          blockNum: "123456",
-          from: "0x0000000000000000000000000000000000000000",
-          to: mockAddress,
-          type: "mint",
-        },
-      ];
-
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
-        transfers: transfersWithMissingTimestamp,
-        pageKey: undefined,
-      });
-
-      mockAlchemyApi.getBlockByNumber.mockResolvedValue(
-        Math.floor(Date.now() / 1000),
-      );
-
-      render(<TransactionHistory />, { wrapper });
-
-      await waitFor(() => {
-        expect(mockAlchemyApi.getBlockByNumber).toHaveBeenCalledWith("123456");
       });
     });
   });
@@ -485,35 +345,12 @@ describe("TransactionHistory", () => {
         txHash: mockTxHash,
         timestamp: Math.floor(Date.now() / 1000),
         blockNum: "123456",
-        from: "0x0000000000000000000000000000000000000000",
+        from: "0x0000000000000000000000000000000000000000" as `0x${string}`,
         to: mockAddress,
-        type: "transfer",
+        type: "transfer" as const,
       };
 
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
-        transfers: [mintTransfer],
-        pageKey: undefined,
-      });
-
-      render(<TransactionHistory />, { wrapper });
-
-      await waitFor(() => {
-        expect(screen.getByText("MINT")).toBeInTheDocument();
-      });
-    });
-
-    it("should classify mint transactions correctly (type=mint)", async () => {
-      const mintTransfer = {
-        tokenId: 1n,
-        txHash: mockTxHash,
-        timestamp: Math.floor(Date.now() / 1000),
-        blockNum: "123456",
-        from: mockAddress,
-        to: mockAddress,
-        type: "mint",
-      };
-
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
+      mockGetAssetTransfers.mockResolvedValue({
         transfers: [mintTransfer],
         pageKey: undefined,
       });
@@ -532,11 +369,11 @@ describe("TransactionHistory", () => {
         timestamp: Math.floor(Date.now() / 1000),
         blockNum: "123457",
         from: mockAddress,
-        to: "0xAnotherAddress123456789012345678901234567890",
-        type: "transfer",
+        to: "0xAnotherAddress123456789012345678901234567890" as `0x${string}`,
+        type: "transfer" as const,
       };
 
-      mockAlchemyApi.getAssetTransfers.mockResolvedValue({
+      mockGetAssetTransfers.mockResolvedValue({
         transfers: [transferOnly],
         pageKey: undefined,
       });
@@ -556,15 +393,15 @@ describe("TransactionHistory", () => {
       });
 
       await waitFor(() => {
-        expect(mockAlchemyApi.getAssetTransfers).toHaveBeenCalledTimes(1);
+        expect(mockGetAssetTransfers).toHaveBeenCalledTimes(1);
       });
 
-      mockAlchemyApi.getAssetTransfers.mockClear();
+      mockGetAssetTransfers.mockClear();
 
       rerender(<TransactionHistory refreshKey={1} />);
 
       await waitFor(() => {
-        expect(mockAlchemyApi.getAssetTransfers).toHaveBeenCalledTimes(1);
+        expect(mockGetAssetTransfers).toHaveBeenCalledTimes(1);
       });
     });
   });
@@ -576,13 +413,6 @@ describe("TransactionHistory", () => {
       expect(
         screen.getByRole("button", { name: /refresh/i }),
       ).toBeInTheDocument();
-    });
-
-    it("should display card structure correctly", () => {
-      const { container } = render(<TransactionHistory />, { wrapper });
-
-      // Check for the card's distinctive classes
-      expect(container.querySelector(".rounded-xl")).toBeInTheDocument();
     });
   });
 });

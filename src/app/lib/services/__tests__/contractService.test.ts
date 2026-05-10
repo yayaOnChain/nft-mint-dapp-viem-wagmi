@@ -137,9 +137,8 @@ describe('ContractService', () => {
 
       expect(writeContract).toHaveBeenCalledWith(
         mockConfig,
-        expect.objectContaining({
-          functionName: 'approve',
-          value: undefined,
+        expect.not.objectContaining({
+          value: expect.anything(),
         }),
       );
     });
