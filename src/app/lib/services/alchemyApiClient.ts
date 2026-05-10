@@ -168,11 +168,3 @@ export const getAlchemyClient = (): AlchemyApiClient => {
   }
   return alchemyClientInstance;
 };
-
-export const setAlchemyClientInstance = (instance: AlchemyApiClient): void => {
-  alchemyClientInstance = instance;
-};
-
-export const resetAlchemyClientInstance = (): void => {
-  alchemyClientInstance = null;
-};

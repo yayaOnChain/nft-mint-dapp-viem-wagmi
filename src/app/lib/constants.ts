@@ -108,54 +108,6 @@ export const IPFS_GATEWAYS = [
   "https://gateway.ipfs.io/ipfs/",
 ] as const;
 
-export const RPC_URLS = {
-  mainnet: {
-    http: "https://eth-mainnet.g.alchemy.com/v2/",
-    ws: "wss://eth-mainnet.g.alchemy.com/v2/",
-  },
-  sepolia: {
-    http: "https://eth-sepolia.g.alchemy.com/v2/",
-    ws: "wss://eth-sepolia.g.alchemy.com/v2/",
-  },
-} as const;
-
-export const DATE_FORMATS = {
-  short: "MMM d, yyyy",
-  long: "MMMM d, yyyy HH:mm:ss",
-  relative: "relative",
-  iso: "iso",
-} as const;
-
-export const VALIDATION_RULES = {
-  mintQuantity: {
-    min: 1,
-    max: 10,
-  },
-  address: {
-    minLength: 42,
-    pattern: /^0x[a-fA-F0-9]{40}$/,
-  },
-  txHash: {
-    minLength: 66,
-    pattern: /^0x[a-fA-F0-9]{64}$/,
-  },
-} as const;
-
-export const CACHE_CONFIG = {
-  staleTime: 5 * 60 * 1000, // 5 minutes
-  gcTime: 10 * 60 * 1000, // 10 minutes
-  retry: 2,
-  retryDelay: 1000,
-} as const;
-
-export const FEATURE_FLAGS = {
-  enableWalletConnect: true,
-  enableEventListeners: true,
-  enableTransactionHistory: true,
-  enableNFTGallery: true,
-  enableDarkMode: true,
-  enableAnalytics: false,
-} as const;
 
 /**
  * Helper function to get explorer URL for a transaction

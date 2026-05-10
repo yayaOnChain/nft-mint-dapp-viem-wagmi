@@ -17,7 +17,3 @@ export const config = getDefaultConfig({
     [sepolia.id]: http(),
   },
 });
-
-// Export chain info for convenience
-export const supportedChains = [mainnet, sepolia];
-export const defaultChain = sepolia;
