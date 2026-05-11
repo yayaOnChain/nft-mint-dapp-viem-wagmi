@@ -372,6 +372,90 @@ describe("NftMinter", () => {
       expect(mintButton).toBeEnabled();
     });
 
+    it("should be disabled when contract data is loading (undefined)", () => {
+      vi.mocked(useReadContract).mockReturnValue({
+        data: undefined,
+        error: null,
+        status: "pending" as const,
+        isError: false,
+        isLoading: true,
+        isPending: true,
+        isSuccess: false,
+        isLoadingError: false,
+        isRefetchError: false,
+        isPlaceholderData: false,
+        dataUpdatedAt: 0,
+        errorUpdatedAt: 0,
+        failureCount: 0,
+        failureReason: null,
+        isFetched: false,
+        isFetchedAfterMount: false,
+        isFetching: false,
+        isStale: false,
+        refetch: vi.fn(),
+        queryKey: ["unknown"],
+        errorUpdateCount: 0,
+        isInitialLoading: true,
+        isPaused: false,
+        isRefetching: false,
+        isPreviousData: false,
+        isNextPlaceholderData: false,
+      } as unknown as ReturnType<typeof useReadContract>);
+
+      render(<NftMinter />, { wrapper });
+
+      const skeletons = screen.getAllByTestId("skeleton");
+      expect(skeletons).toHaveLength(5);
+    });
+
+    it("should be disabled when totalMinted is 0n (edge case)", () => {
+      vi.mocked(useReadContract).mockImplementation(
+        (_config?: { functionName?: string }) => {
+          let data: unknown;
+          if (_config?.functionName === "totalMinted") data = 0n;
+          else if (_config?.functionName === "MAX_SUPPLY") data = 1000n;
+          else if (_config?.functionName === "MINT_PRICE") data = parseEther("0.01");
+          else if (_config?.functionName === "balanceOf") data = 0n;
+          else data = undefined;
+
+          return {
+            data,
+            error: null,
+            status: "success" as const,
+            isError: false,
+            isLoading: false,
+            isPending: false,
+            isSuccess: true,
+            isLoadingError: false,
+            isRefetchError: false,
+            isPlaceholderData: false,
+            dataUpdatedAt: Date.now(),
+            errorUpdatedAt: 0,
+            failureCount: 0,
+            failureReason: null,
+            isFetched: true,
+            isFetchedAfterMount: true,
+            isFetching: false,
+            isStale: false,
+            refetch: vi.fn(),
+            queryKey: [_config?.functionName ?? "unknown"],
+            errorUpdateCount: 0,
+            isInitialLoading: false,
+            isPaused: false,
+            isRefetching: false,
+            isPreviousData: false,
+            isNextPlaceholderData: false,
+          } as unknown as ReturnType<typeof useReadContract>;
+        }
+      );
+
+      render(<NftMinter />, { wrapper });
+
+      const mintButton = screen.getByRole("button", { name: /mint nft/i });
+      expect(mintButton).toBeEnabled();
+      expect(screen.getByText(/Minted: 0 \/ 1000/i)).toBeInTheDocument();
+    });
+
     it('should show "Confirm in Wallet..." when transaction is pending', () => {
       vi.mocked(useWriteContract).mockReturnValue({
         data: undefined,

@@ -137,9 +137,9 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
 
   const canMint =
     isConnected &&
-    mintPrice &&
-    maxSupply &&
-    totalMinted &&
+    mintPrice !== undefined &&
+    maxSupply !== undefined &&
+    totalMinted !== undefined &&
     quantity >= 1 &&
     quantity <= 10 &&
     totalMinted + BigInt(quantity) <= maxSupply;
@@ -170,7 +170,7 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
 
   // Loading state for initial data fetch
   const isInitialLoading =
-    !totalMinted || !maxSupply || !mintPrice || !userBalance;
+    totalMinted === undefined || maxSupply === undefined || mintPrice === undefined || userBalance === undefined;
 
   // Show skeleton while loading contract data
   if (isInitialLoading) {
