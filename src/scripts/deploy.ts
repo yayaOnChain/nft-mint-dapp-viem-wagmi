@@ -14,7 +14,7 @@ async function main() {
   if (signers.length === 0) {
     throw new Error(
       `No accounts found for network "${hre.network.name}".\n` +
-      `Please set PRIVATE_KEY in your .env file for live networks.\n` +
+      `Please set PRIVATE_KEY in your .env.local file for live networks.\n` +
       `For local testing, run: npx hardhat node`
     );
   }
@@ -78,7 +78,7 @@ async function main() {
     console.log("  2. Update the base URI using setBaseURI() function");
     console.log("     Example: setBaseURI('https://ipfs.io/ipfs/QmYourHash/')");
   }
-  console.log("  3. Update VITE_CONTRACT_ADDRESS in your .env file");
+  console.log("  3. Update NEXT_PUBLIC_CONTRACT_ADDRESS in your .env.local file");
   console.log("  4. Start minting NFTs!");
   console.log("=".repeat(60));
 }

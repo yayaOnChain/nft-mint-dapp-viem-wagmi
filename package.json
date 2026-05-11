@@ -25,6 +25,7 @@
     "typechain": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" hardhat typechain",
     "deploy:local": "npx hardhat run src/scripts/deploy.ts --network localhost",
     "deploy:sepolia": "npx hardhat run src/scripts/deploy.ts --network sepolia",
+    "set-base-uri": "npx hardhat run src/scripts/set-base-uri.ts --network sepolia",
     "find:deadcode": "knip"
   },
   "dependencies": {

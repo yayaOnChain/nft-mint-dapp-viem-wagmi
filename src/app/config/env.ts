@@ -6,7 +6,6 @@
 interface EnvConfig {
   walletConnectProjectId: string;
   contractAddress: `0x${string}`;
-  rpcUrlSepolia: string;
   useWebSocket: boolean;
 }
 
@@ -14,7 +13,6 @@ interface EnvConfig {
 const env: EnvConfig = {
   walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "",
   contractAddress: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "") as `0x${string}`,
-  rpcUrlSepolia: process.env.NEXT_PUBLIC_RPC_URL_SEPOLIA || "",
   useWebSocket: process.env.NEXT_PUBLIC_USE_WEBSOCKET === "true",
 };
 

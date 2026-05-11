@@ -1,10 +1,13 @@
+import * as dotenv from "dotenv";
+import * as path from "path";
+import { fileURLToPath } from "url";
+
+dotenv.config({ path: path.join(fileURLToPath(import.meta.url), "../.env.local") });
+
 import type { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
 import "@typechain/hardhat";
-import * as dotenv from "dotenv";
-
-dotenv.config();
 
 const config: HardhatUserConfig = {
   solidity: {
