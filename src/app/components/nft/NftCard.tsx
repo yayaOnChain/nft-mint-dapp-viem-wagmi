@@ -19,7 +19,7 @@ export const NftCard = ({ nft }: { nft: UserNFT }) => {
 
   useEffect(() => {
     const fetchMetadata = async () => {
-      if (!nft.tokenUri || imageError) return;
+      if (!nft.tokenUri || nft.tokenUri === "" || imageError) return;
 
       try {
         // Convert IPFS URI to HTTPS URL using current gateway
@@ -30,20 +30,17 @@ export const NftCard = ({ nft }: { nft: UserNFT }) => {
 
         const response = await fetch(uri);
         if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status}`);
+          // 404 or other error - metadata doesn't exist yet, show placeholder
+          setImageError(true);
+          return;
         }
 
         const data = await response.json();
         setMetadata(data);
       } catch (err) {
-        console.error("Failed to fetch NFT metadata:", err);
-
-        // Try next gateway if available
-        if (currentGatewayIndex < IPFS_GATEWAYS.length - 1) {
-          setCurrentGatewayIndex((prev) => prev + 1);
-        } else {
-          setImageError(true);
-        }
+        console.warn("Failed to fetch NFT metadata:", err);
+        // Set image error gracefully
+        setImageError(true);
       }
     };
 
