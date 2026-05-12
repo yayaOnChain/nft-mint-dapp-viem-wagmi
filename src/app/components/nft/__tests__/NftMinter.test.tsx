@@ -262,6 +262,84 @@ describe("NftMinter", () => {
     });
   });
 
+  describe("error state", () => {
+    it("should show error message and retry button when data fetching fails", () => {
+      vi.mocked(useReadContract).mockReturnValue({
+        data: undefined,
+        error: new Error("RPC Error"),
+        status: "error" as const,
+        isError: true,
+        isLoading: false,
+        isPending: false,
+        isSuccess: false,
+        isLoadingError: true,
+        isRefetchError: false,
+        isPlaceholderData: false,
+        dataUpdatedAt: 0,
+        errorUpdatedAt: Date.now(),
+        failureCount: 1,
+        failureReason: new Error("RPC Error"),
+        isFetched: true,
+        isFetchedAfterMount: true,
+        isFetching: false,
+        isStale: false,
+        refetch: vi.fn(),
+        queryKey: ["unknown"],
+        errorUpdateCount: 1,
+        isInitialLoading: false,
+        isPaused: false,
+        isRefetching: false,
+        isPreviousData: false,
+        isNextPlaceholderData: false,
+      } as unknown as ReturnType<typeof useReadContract>);
+
+      render(<NftMinter />, { wrapper });
+
+      expect(screen.getByText("Failed to fetch contract data")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+    });
+
+    it("should call refetch functions when retry button is clicked", () => {
+      const mockRefetch = vi.fn();
+      vi.mocked(useReadContract).mockReturnValue({
+        data: undefined,
+        error: new Error("RPC Error"),
+        status: "error" as const,
+        isError: true,
+        isLoading: false,
+        isPending: false,
+        isSuccess: false,
+        isLoadingError: true,
+        isRefetchError: false,
+        isPlaceholderData: false,
+        dataUpdatedAt: 0,
+        errorUpdatedAt: Date.now(),
+        failureCount: 1,
+        failureReason: new Error("RPC Error"),
+        isFetched: true,
+        isFetchedAfterMount: true,
+        isFetching: false,
+        isStale: false,
+        refetch: mockRefetch,
+        queryKey: ["unknown"],
+        errorUpdateCount: 1,
+        isInitialLoading: false,
+        isPaused: false,
+        isRefetching: false,
+        isPreviousData: false,
+        isNextPlaceholderData: false,
+      } as unknown as ReturnType<typeof useReadContract>);
+
+      render(<NftMinter />, { wrapper });
+
+      const retryButton = screen.getByRole("button", { name: /retry/i });
+      fireEvent.click(retryButton);
+
+      // useReadContract is called 4 times in the component, so mockRefetch should be called 4 times
+      expect(mockRefetch).toHaveBeenCalledTimes(4);
+    });
+  });
+
   describe("minting UI", () => {
     it("should display progress bar with correct values", () => {
       render(<NftMinter />, { wrapper });

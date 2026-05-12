@@ -38,29 +38,48 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
     data: totalMinted,
     refetch: refetchTotalMinted,
     isLoading: isLoadingData,
+    error: errorTotalMinted,
   } = useReadContract({
     address: contractAddress,
     abi: myNftAbi,
     functionName: "totalMinted",
   });
 
-  const { data: maxSupply } = useReadContract({
+  const { 
+    data: maxSupply, 
+    isLoading: isLoadingMaxSupply,
+    error: errorMaxSupply,
+    refetch: refetchMaxSupply
+  } = useReadContract({
     address: contractAddress,
     abi: myNftAbi,
     functionName: "MAX_SUPPLY",
   });
 
-  const { data: mintPrice } = useReadContract({
+  const { 
+    data: mintPrice, 
+    isLoading: isLoadingMintPrice,
+    error: errorMintPrice,
+    refetch: refetchMintPrice
+  } = useReadContract({
     address: contractAddress,
     abi: myNftAbi,
     functionName: "MINT_PRICE",
   });
 
-  const { data: userBalance, refetch: refetchUserBalance } = useReadContract({
+  const { 
+    data: userBalance, 
+    refetch: refetchUserBalance,
+    isLoading: isLoadingUserBalance,
+    error: errorUserBalance
+  } = useReadContract({
     address: contractAddress,
     abi: myNftAbi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    }
   });
 
   // Check user's ETH balance for validation
@@ -158,6 +177,14 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
     } as unknown as Parameters<typeof writeContract>[0]);
   };
 
+  // Debug any errors
+  useEffect(() => {
+    if (errorTotalMinted) console.error("Error totalMinted:", errorTotalMinted);
+    if (errorMaxSupply) console.error("Error maxSupply:", errorMaxSupply);
+    if (errorMintPrice) console.error("Error mintPrice:", errorMintPrice);
+    if (errorUserBalance) console.error("Error userBalance:", errorUserBalance);
+  }, [errorTotalMinted, errorMaxSupply, errorMintPrice, errorUserBalance]);
+
   if (!isConnected) {
     return (
       <Card>
@@ -168,9 +195,10 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
     );
   }
 
+
   // Loading state for initial data fetch
   const isInitialLoading =
-    totalMinted === undefined || maxSupply === undefined || mintPrice === undefined || userBalance === undefined;
+    isLoadingData || isLoadingMaxSupply || isLoadingMintPrice || isLoadingUserBalance;
 
   // Show skeleton while loading contract data
   if (isInitialLoading) {
@@ -182,6 +210,33 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
         <Skeleton variant="rect" className="w-full h-12 mb-4" data-testid="skeleton" />
         <Skeleton variant="rect" className="w-full h-12" data-testid="skeleton" />
       </div>
+    );
+  }
+
+  const hasError = errorTotalMinted || errorMaxSupply || errorMintPrice || errorUserBalance;
+
+  if (hasError) {
+    return (
+      <Card className="max-w-md mx-auto">
+        <div className="flex flex-col items-center justify-center space-y-4 p-4">
+          <p className="text-red-400 text-center font-medium">Failed to fetch contract data</p>
+          <p className="text-sm text-gray-400 text-center mb-4">
+            An error occurred while connecting to the RPC or blockchain node.
+          </p>
+          <Button 
+            onClick={() => {
+              refetchTotalMinted();
+              refetchMaxSupply();
+              refetchMintPrice();
+              refetchUserBalance();
+            }}
+            variant="secondary"
+            className="w-full"
+          >
+            Retry
+          </Button>
+        </div>
+      </Card>
     );
   }
 
