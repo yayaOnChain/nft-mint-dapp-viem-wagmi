@@ -257,9 +257,15 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
   };
 
   // Reset write contract state on error
-  if (writeError) {
-    console.error("Mint error:", writeError);
-  }
+  useEffect(() => {
+    if (writeError) {
+      console.error("Mint error:", writeError);
+      const errorMsg = writeError.message.includes("User rejected")
+        ? "Transaction rejected by user"
+        : writeError.message;
+      toastRef.current.error("Mint Failed", errorMsg);
+    }
+  }, [writeError]);
 
   // Handle successful mint - use useEffect to avoid setState during render
   useEffect(() => {
@@ -285,9 +291,13 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
       setAttributes([]);
       setMetadataIpfsUrl("");
       setQuantity(1);
+      // Reset write contract AFTER form reset to avoid state conflicts
       resetWriteContract();
 
       onMintSuccessRef.current?.();
+
+      // Switch back to create tab for next mint
+      setActiveTab("create");
     }
   }, [isConfirmed, hash, refetchTotalMinted, refetchUserBalance, refetchEthBalance, resetWriteContract]);
 
