@@ -13,7 +13,7 @@ export const config = getDefaultConfig({
   ssr: true,
 
   transports: {
-    [mainnet.id]: http(),
+    [mainnet.id]: http("https://cloudflare-eth.com"),
     [sepolia.id]: http(),
   },
 });
