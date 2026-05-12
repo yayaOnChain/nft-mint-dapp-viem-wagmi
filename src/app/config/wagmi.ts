@@ -1,6 +1,6 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { http } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
+import { /* mainnet, */ sepolia } from "wagmi/chains";
 import { walletConnectProjectId } from "@/config/env";
 
 /**
@@ -9,11 +9,11 @@ import { walletConnectProjectId } from "@/config/env";
 export const config = getDefaultConfig({
   appName: "MyProjectNFT",
   projectId: walletConnectProjectId,
-  chains: [mainnet, sepolia],
+  chains: [/* mainnet, */ sepolia],
   ssr: true,
 
   transports: {
-    [mainnet.id]: http("https://cloudflare-eth.com"),
+    // [mainnet.id]: http("https://cloudflare-eth.com"),
     [sepolia.id]: http(),
   },
 });
