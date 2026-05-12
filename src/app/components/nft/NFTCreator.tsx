@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   useAccount,
   useReadContract,
@@ -62,6 +62,20 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
 
   const toast = useToast();
 
+  // Use refs for values needed in useEffect to avoid dependency warnings
+  const imagePreviewRef = useRef(imagePreview);
+  const onMintSuccessRef = useRef(onMintSuccess);
+  const toastRef = useRef(toast);
+
+  // Keep refs updated
+  useEffect(() => {
+    imagePreviewRef.current = imagePreview;
+  }, [imagePreview]);
+
+  useEffect(() => {
+    onMintSuccessRef.current = onMintSuccess;
+  }, [onMintSuccess]);
+
   // Contract reads
   const {
     data: totalMinted,
@@ -115,7 +129,7 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
       if (!file) return;
 
       // Validate file
-      const validation = validateImageFile(file, 10);
+      const validation = validateImageFile(file, 0.1);
       if (!validation.valid) {
         toast.error(validation.error || "Invalid file");
         return;
@@ -230,11 +244,14 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
 
     toast.info("Confirm Transaction", `Minting ${quantity} NFT(s)`);
 
+    // Create array of token URIs (same URI for all NFTs in batch)
+    const tokenURIs = Array(quantity).fill(metadataIpfsUrl);
+
     writeContract({
       address: contractAddress,
       abi: myNftAbi,
-      functionName: "mint",
-      args: [BigInt(quantity)],
+      functionName: "mintWithURI",
+      args: [BigInt(quantity), tokenURIs],
       value: totalCost,
     } as unknown as Parameters<typeof writeContract>[0]);
   };
@@ -244,32 +261,35 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
     console.error("Mint error:", writeError);
   }
 
-  // Handle successful mint
-  if (isConfirmed && hash) {
-    toast.success(
-      "NFT Minted Successfully!",
-      `Transaction: ${hash}`
-    );
+  // Handle successful mint - use useEffect to avoid setState during render
+  useEffect(() => {
+    if (isConfirmed && hash) {
+      toastRef.current.success(
+        "NFT Minted Successfully!",
+        `Transaction: ${hash}`
+      );
 
-    refetchTotalMinted();
-    refetchUserBalance();
-    refetchEthBalance();
+      refetchTotalMinted();
+      refetchUserBalance();
+      refetchEthBalance();
 
-    // Reset form
-    setName("");
-    setDescription("");
-    setImageFile(null);
-    if (imagePreview) {
-      revokeImagePreview(imagePreview);
-      setImagePreview("");
+      // Reset form
+      setName("");
+      setDescription("");
+      setImageFile(null);
+      const currentPreview = imagePreviewRef.current;
+      if (currentPreview) {
+        revokeImagePreview(currentPreview);
+        setImagePreview("");
+      }
+      setAttributes([]);
+      setMetadataIpfsUrl("");
+      setQuantity(1);
+      resetWriteContract();
+
+      onMintSuccessRef.current?.();
     }
-    setAttributes([]);
-    setMetadataIpfsUrl("");
-    setQuantity(1);
-    resetWriteContract();
-
-    onMintSuccess?.();
-  }
+  }, [isConfirmed, hash, refetchTotalMinted, refetchUserBalance, refetchEthBalance, resetWriteContract]);
 
   // Calculations
   const totalCost = mintPrice ? mintPrice * BigInt(quantity) : BigInt(0);
@@ -284,10 +304,10 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
     metadataIpfsUrl &&
     mintPrice &&
     maxSupply &&
-    totalMinted &&
+    totalMinted !== undefined &&
     quantity >= 1 &&
     quantity <= 10 &&
-    totalMinted + BigInt(quantity) <= maxSupply;
+    Number(totalMinted) + quantity <= Number(maxSupply);
 
   if (!isConnected) {
     return (
@@ -332,7 +352,7 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
               <label className="block text-sm text-gray-400 mb-2">
                 NFT Image *
               </label>
-              <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-purple-500 transition-colors">
+              <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-purple-500 transition-colors relative">
                 {imagePreview ? (
                   <div className="space-y-3">
                     <img
@@ -361,18 +381,16 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs text-gray-500 mb-4">
-                      PNG, JPG, GIF, WebP, SVG (max 10MB)
+                      PNG, JPG, GIF, WebP, SVG (max 100KB)
                     </p>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleImageSelect}
-                      className="hidden"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       id="image-upload"
                     />
-                    <label htmlFor="image-upload">
-                      <Button variant="secondary">Select Image</Button>
-                    </label>
+                    <Button variant="secondary">Select Image</Button>
                   </div>
                 )}
               </div>
@@ -591,8 +609,8 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
             {/* User Balance Info */}
             <div className="text-sm text-gray-400">
               Your Balance:{" "}
-              {ethBalance?.formatted
-                ? `${ethBalance.formatted} ${ethBalance.symbol}`
+              {ethBalance?.value
+                ? `${formatEther(ethBalance.value)} ${ethBalance.symbol}`
                 : "Loading..."}
             </div>
 

@@ -10,6 +10,16 @@ export const myNftAbi = [
     type: "function",
   },
   {
+    inputs: [
+      { internalType: "uint256", name: "quantity", type: "uint256" },
+      { internalType: "string[]", name: "tokenURIs", type: "string[]" },
+    ],
+    name: "mintWithURI",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "totalMinted",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],

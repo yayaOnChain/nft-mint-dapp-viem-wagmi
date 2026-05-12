@@ -142,4 +142,70 @@ describe("MyNFT Contract", function () {
         .withArgs(addr1.address, 1, "");
     });
   });
+
+  describe("mintWithURI", function () {
+    it("Should mint NFT with custom token URI", async function () {
+      const mintPrice = await myNFT.MINT_PRICE();
+      const customURI = "ipfs://QmTest123/metadata.json";
+
+      await myNFT.connect(addr1).mintWithURI(1, [customURI], { value: mintPrice });
+
+      expect(await myNFT.totalMinted()).to.equal(1);
+      expect(await myNFT.ownerOf(1)).to.equal(addr1.address);
+      expect(await myNFT.tokenURI(1)).to.equal(customURI);
+    });
+
+    it("Should mint batch NFTs with custom token URIs", async function () {
+      const mintPrice = await myNFT.MINT_PRICE();
+      const quantity = 3;
+      const customURIs = [
+        "ipfs://QmToken1/metadata.json",
+        "ipfs://QmToken2/metadata.json",
+        "ipfs://QmToken3/metadata.json",
+      ];
+
+      await myNFT.connect(addr1).mintWithURI(quantity, customURIs, {
+        value: mintPrice * BigInt(quantity),
+      });
+
+      expect(await myNFT.totalMinted()).to.equal(quantity);
+      expect(await myNFT.tokenURI(1)).to.equal(customURIs[0]);
+      expect(await myNFT.tokenURI(2)).to.equal(customURIs[1]);
+      expect(await myNFT.tokenURI(3)).to.equal(customURIs[2]);
+    });
+
+    it("Should fail if token URIs count doesn't match quantity", async function () {
+      const mintPrice = await myNFT.MINT_PRICE();
+      const wrongURIs = ["ipfs://QmOnlyOneURI"];
+
+      await expect(
+        myNFT.connect(addr1).mintWithURI(3, wrongURIs, { value: mintPrice * BigInt(3) })
+      ).to.be.revertedWith("Token URIs count must match quantity");
+    });
+
+    it("Should fail if minting exceeds max supply", async function () {
+      const mintPrice = await myNFT.MINT_PRICE();
+      const maxSupply = await myNFT.MAX_SUPPLY();
+      const customURIs = Array(Number(maxSupply) + 1).fill("ipfs://QmTest/metadata.json");
+
+      await expect(
+        myNFT.connect(addr1).mintWithURI(maxSupply + BigInt(1), customURIs, {
+          value: mintPrice * (maxSupply + BigInt(1)),
+        })
+      ).to.be.revertedWith("Max supply exceeded");
+    });
+
+    it("Should emit NFTMinted events with correct token URIs", async function () {
+      const mintPrice = await myNFT.MINT_PRICE();
+      const customURIs = ["ipfs://QmEvent1.json", "ipfs://QmEvent2.json"];
+
+      await expect(
+        myNFT.connect(addr1).mintWithURI(2, customURIs, { value: mintPrice * BigInt(2) })
+      )
+        .to.emit(myNFT, "NFTMinted")
+        .withArgs(addr1.address, 1, customURIs[0])
+        .to.emit(myNFT, "NFTMinted")
+        .withArgs(addr1.address, 2, customURIs[1]);
+    });
+  });
 });

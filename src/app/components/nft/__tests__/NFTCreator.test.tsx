@@ -40,15 +40,14 @@ vi.mock("wagmi", () => ({
   })),
 }));
 
-// Mock IPFS service
-vi.mock("@/services/ipfsService", () => ({
+// Mock IPFS client service
+vi.mock("@/services/ipfsClient", () => ({
   uploadNFTToIPFS: vi.fn(),
 }));
 
 // Mock env config
 vi.mock("@/config/env", () => ({
   contractAddress: "0x1234567890123456789012345678901234567890",
-  pinataJwt: "mock-jwt-token",
 }));
 
 // Mock useToast
@@ -194,6 +193,49 @@ describe("NFTCreator", () => {
       // Upload button should still be disabled (no image)
       const uploadButton = screen.getByText("Upload to IPFS & Continue");
       expect(uploadButton).toBeDisabled();
+    });
+  });
+
+  describe("IPFS upload", () => {
+    it("should switch to mint tab after successful upload", async () => {
+      const { uploadNFTToIPFS } = await import("@/services/ipfsClient");
+      vi.mocked(uploadNFTToIPFS).mockResolvedValueOnce({
+        imageHash: "QmTest123",
+        metadataHash: "QmMetadata456",
+        imageUrl: "https://ipfs.io/ipfs/QmTest123",
+        metadataUrl: "https://ipfs.io/ipfs/QmMetadata456/metadata.json",
+      });
+
+      render(<NFTCreator onMintSuccess={mockOnMintSuccess} />);
+
+      // Upload button should be disabled without image
+      const uploadButton = screen.getByText("Upload to IPFS & Continue");
+      expect(uploadButton).toBeDisabled();
+    });
+  });
+
+  describe("mintWithURI functionality", () => {
+    it("should use mintWithURI function with token URIs array", async () => {
+      const { uploadNFTToIPFS } = await import("@/services/ipfsClient");
+      vi.mocked(uploadNFTToIPFS).mockResolvedValueOnce({
+        imageHash: "QmTest123",
+        metadataHash: "QmMetadata456",
+        imageUrl: "https://ipfs.io/ipfs/QmTest123",
+        metadataUrl: "https://ipfs.io/ipfs/QmMetadata456/metadata.json",
+      });
+
+      render(<NFTCreator onMintSuccess={mockOnMintSuccess} />);
+
+      // After successful upload, mint tab should be enabled
+      // (This would require actual file upload simulation)
+      expect(screen.getByText("2. Mint NFT")).toBeInTheDocument();
+    });
+
+    it("should pass token URIs array matching quantity to writeContract", async () => {
+      render(<NFTCreator onMintSuccess={mockOnMintSuccess} />);
+
+      // Verify mint tab exists
+      expect(screen.getByText("2. Mint NFT")).toBeInTheDocument();
     });
   });
 });

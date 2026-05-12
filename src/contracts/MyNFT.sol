@@ -16,25 +16,30 @@ contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
 
     // The price to mint one NFT (in Wei)
     uint256 public constant MINT_PRICE = 0.01 ether;
-    
+
     // Base URI for token metadata (e.g., IPFS gateway URL)
     string private _baseTokenURI;
-    
+
     // Mapping for individual token URIs (replaces OpenZeppelin's ERC721URIStorage)
     mapping(uint256 => string) private _tokenURIs;
 
     // Event emitted when a new NFT is minted
-    event NFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI);
-    
+    event NFTMinted(
+        address indexed minter,
+        uint256 indexed tokenId,
+        string tokenURI
+    );
+
     // Event emitted when base URI is updated
     event BaseURIUpdated(string newBaseURI);
 
     /**
      * @dev Constructor sets the initial owner and base URI.
      */
-    constructor(address initialOwner, string memory initialBaseURI) 
-        ERC721A("MyProjectNFT", "MPNFT") 
-    {
+    constructor(
+        address initialOwner,
+        string memory initialBaseURI
+    ) ERC721A("MyProjectNFT", "MPNFT") {
         transferOwnership(initialOwner);
         _baseTokenURI = initialBaseURI;
     }
@@ -43,8 +48,39 @@ contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
      * @dev Allows users to mint NFTs.
      */
     function mint(uint256 quantity) external payable nonReentrant {
+        uint256 startTokenId = _mintInternal(quantity, msg.sender, "");
+        startTokenId;
+    }
+
+    /**
+     * @dev Allows users to mint NFTs with custom token URI.
+     */
+    function mintWithURI(
+        uint256 quantity,
+        string[] calldata tokenURIs
+    ) external payable nonReentrant {
+        require(
+            tokenURIs.length == quantity,
+            "Token URIs count must match quantity"
+        );
+        uint256 startTokenId = _mintInternal(quantity, msg.sender, "");
+        for (uint256 i = 0; i < quantity; i++) {
+            uint256 tokenId = startTokenId + i;
+            _tokenURIs[tokenId] = tokenURIs[i];
+            emit NFTMinted(msg.sender, tokenId, tokenURIs[i]);
+        }
+    }
+
+    /**
+     * @dev Internal function to handle minting logic.
+     */
+    function _mintInternal(
+        uint256 quantity,
+        address to,
+        string memory
+    ) internal returns (uint256) {
         require(quantity > 0, "Mint quantity must be greater than 0");
-        
+
         uint256 currentTotal = _totalMinted();
 
         // Check if minting this quantity exceeds max supply
@@ -55,24 +91,31 @@ contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
 
         // O(1) BATCH MINTING USING ERC721A: ONLY 1 STATE UPDATE (HIGHLY GAS EFFICIENT!)
         uint256 startTokenId = _nextTokenId();
-        _mint(msg.sender, quantity);
+        _mint(to, quantity);
 
         // This loop is now ONLY used to emit Event logs for the frontend
         // Gas for emitting Events is exponentially cheaper than State Modifications.
         for (uint256 i = 0; i < quantity; ) {
             uint256 tokenId = startTokenId + i;
-            emit NFTMinted(msg.sender, tokenId, tokenURI(tokenId));
-            
+            emit NFTMinted(to, tokenId, tokenURI(tokenId));
+
             // Unchecked ++i saves extra gas at the Opcode level
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
+
+        return startTokenId;
     }
 
     /**
      * @dev Allows the owner to withdraw all ETH collected from minting.
      */
     function withdraw() external onlyOwner {
-        (bool success, ) = payable(owner()).call{value: address(this).balance}("");
+        address recipient = owner();
+        uint256 amount = address(this).balance;
+        (bool success, ) = recipient.call{value: amount}("");
+        success; // Silence warning
         require(success, "Withdraw failed");
     }
 
@@ -82,7 +125,7 @@ contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
     function totalMinted() external view returns (uint256) {
         return _totalMinted();
     }
-    
+
     /**
      * @dev Sets the base URI for all token IDs.
      */
@@ -90,15 +133,18 @@ contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
         _baseTokenURI = baseURI;
         emit BaseURIUpdated(baseURI);
     }
-    
+
     /**
      * @dev Sets the token URI for a specific token ID (Individual IPFS Mapping).
      */
-    function setTokenURI(uint256 tokenId, string memory _tokenURI) external onlyOwner {
+    function setTokenURI(
+        uint256 tokenId,
+        string memory _tokenURI
+    ) external onlyOwner {
         require(_exists(tokenId), "Token does not exist");
         _tokenURIs[tokenId] = _tokenURI;
     }
-    
+
     function baseTokenURI() external view returns (string memory) {
         return _baseTokenURI;
     }
@@ -113,11 +159,13 @@ contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
     function _startTokenId() internal view virtual override returns (uint256) {
         return 1;
     }
-    
+
     /**
      * @dev Combines the Contract's Base URI with the Token's Specific URI
      */
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
         require(_exists(tokenId), "URI query for nonexistent token");
 
         string memory _tokenURI = _tokenURIs[tokenId];
@@ -127,12 +175,12 @@ contract MyNFT is ERC721A, Ownable, ReentrancyGuard {
         if (bytes(base).length == 0) {
             return _tokenURI;
         }
-        
+
         // If both are present, concatenate: Base_URI + Specific_URI
         if (bytes(_tokenURI).length > 0) {
             return string(abi.encodePacked(base, _tokenURI));
         }
-        
+
         // If there is a Base_URI but NO Specific_URI, concatenate: Base_URI + token_id
         return string(abi.encodePacked(base, _toString(tokenId)));
     }

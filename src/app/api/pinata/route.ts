@@ -33,8 +33,9 @@ export async function POST(request: NextRequest) {
       const data = await response.json();
 
       if (!response.ok) {
+        console.error('Pinata API error:', data);
         return NextResponse.json(
-          { error: data.error || 'Failed to upload JSON to IPFS' },
+          { error: data.error || data.message || 'Failed to upload to IPFS' },
           { status: response.status }
         );
       }
@@ -57,8 +58,9 @@ export async function POST(request: NextRequest) {
       const data = await response.json();
 
       if (!response.ok) {
+        console.error('Pinata file upload error:', data);
         return NextResponse.json(
-          { error: data.error || 'Failed to upload to IPFS' },
+          { error: data.error || data.message || 'Failed to upload to IPFS' },
           { status: response.status }
         );
       }
@@ -68,7 +70,8 @@ export async function POST(request: NextRequest) {
         gatewayUrl: `${PINATA_GATEWAY}${data.IpfsHash}`
       });
     }
-  } catch {
+  } catch (error) {
+    console.error('Pinata route error:', error);
     return NextResponse.json(
       { error: 'Failed to upload to IPFS' },
       { status: 500 }

@@ -37,12 +37,14 @@ export async function uploadFileToIPFS(file: File): Promise<PinataUploadResult> 
     body: formData,
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || `Failed to upload to IPFS: ${response.status}`);
+    console.error('IPFS upload failed:', response.status, data);
+    throw new Error(data.error || data.message || `Failed to upload to IPFS: ${response.status}`);
   }
 
-  return response.json();
+  return data;
 }
 
 export async function uploadMetadataToIPFS(
@@ -61,12 +63,14 @@ export async function uploadMetadataToIPFS(
     }),
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || `Failed to upload metadata to IPFS: ${response.status}`);
+    console.error('IPFS metadata upload failed:', response.status, data);
+    throw new Error(data.error || data.message || `Failed to upload metadata to IPFS: ${response.status}`);
   }
 
-  return response.json();
+  return data;
 }
 
 export async function uploadNFTToIPFS(

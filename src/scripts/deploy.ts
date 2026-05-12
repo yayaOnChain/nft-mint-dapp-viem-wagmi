@@ -27,15 +27,8 @@ async function main() {
   // Get the Contract Factory
   const MyNFTFactory = await hre.ethers.getContractFactory("MyNFT");
 
-  // Default base URI - can be set via environment variable or use placeholder
-  // For production, set to your Pinata gateway URL
-  // Example: "https://ipfs.io/ipfs/QmYourBaseHash/"
-  const initialBaseURI = process.env.INITIAL_BASE_URI || "";
-
-  console.log("Initial Base URI:", initialBaseURI || "(empty - can be set later via setBaseURI)");
-
-  // Deploy the contract with owner address and initial base URI
-  const myNFT = await MyNFTFactory.deploy(deployer.address, initialBaseURI);
+  // Deploy the contract with owner address (empty base URI - token URIs are set per-NFT via mintWithURI)
+  const myNFT = await MyNFTFactory.deploy(deployer.address, "");
 
   // Wait for deployment to be confirmed
   await myNFT.waitForDeployment();
@@ -59,7 +52,6 @@ async function main() {
       myNFT: contractAddress,
       network,
       deployer: deployer.address,
-      initialBaseURI: initialBaseURI || "",
     }, null, 2)
   );
   console.log(`Contract address saved to ${filename}`);
@@ -71,15 +63,9 @@ async function main() {
   console.log("Contract Address:", contractAddress);
   console.log("Network:", network);
   console.log("Owner:", deployer.address);
-  console.log("Base URI:", initialBaseURI || "(not set)");
   console.log("\nNext steps:");
-  if (!initialBaseURI) {
-    console.log("  1. Upload your metadata to IPFS (e.g., Pinata)");
-    console.log("  2. Update the base URI using setBaseURI() function");
-    console.log("     Example: setBaseURI('https://ipfs.io/ipfs/QmYourHash/')");
-  }
-  console.log("  3. Update NEXT_PUBLIC_CONTRACT_ADDRESS in your .env.local file");
-  console.log("  4. Start minting NFTs!");
+  console.log("  1. Update NEXT_PUBLIC_CONTRACT_ADDRESS in your .env.local file");
+  console.log("  2. Start minting NFTs with custom metadata!");
   console.log("=".repeat(60));
 }
 
