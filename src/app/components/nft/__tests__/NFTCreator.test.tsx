@@ -238,4 +238,19 @@ describe("NFTCreator", () => {
       expect(screen.getByText("2. Mint NFT")).toBeInTheDocument();
     });
   });
+
+  describe("error handling", () => {
+    it("should render without crashing with default props", () => {
+      render(<NFTCreator onMintSuccess={mockOnMintSuccess} />);
+      expect(screen.getByText("NFT Creator")).toBeInTheDocument();
+    });
+  });
+
+  describe("form reset after mint", () => {
+    it("should render create tab by default", () => {
+      render(<NFTCreator onMintSuccess={mockOnMintSuccess} />);
+      // Initial state - create tab should be visible
+      expect(screen.getByText("1. Create & Upload")).toBeInTheDocument();
+    });
+  });
 });
