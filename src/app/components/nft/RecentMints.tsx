@@ -15,9 +15,6 @@ export const RecentMints = () => {
   // Updated unified hook returns loading/error states
   const unifiedResult = useNftMintedEventsUnified({
     contractAddress,
-    onNewMint: (event) => {
-      console.log("🎉 New mint detected:", event.tokenId.toString());
-    },
   });
   const recentMints = unifiedResult.recentMints as MintEventWithTimestamp[];
   const isLoading =
