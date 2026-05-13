@@ -1,6 +1,6 @@
 # NFT Mint DApp with Viem and Wagmi
 
-A modern, production-ready decentralized application (DApp) for minting NFTs on the Ethereum blockchain. Built with cutting-edge Web3 technologies including **Viem**, **Wagmi v2**, **RainbowKit**, and **React 19**, backed by a Solidity smart contract compiled with Hardhat.
+A modern, production-ready decentralized application (DApp) for minting NFTs on the Ethereum blockchain. Built with cutting-edge Web3 technologies including **Viem**, **Wagmi v2**, **RainbowKit**, and **Next.js 16**, backed by a Solidity smart contract compiled with Hardhat.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![React](https://img.shields.io/badge/React-19.2.0-61dafb.svg)
@@ -51,6 +51,7 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 - 🎨 **Modern UI** - Beautiful dark theme with Tailwind CSS v4
 - 📱 **Responsive Design** - Mobile-first, works on all devices
 - 🔐 **Type Safe** - Full TypeScript support with strict type checking
+- 🚀 **Next.js 16** - Server components, App Router, and SSR support
 
 ---
 
@@ -60,9 +61,8 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 | Category               | Technology                     |
 | ---------------------- | ------------------------------ |
-| **Frontend Framework** | React 19.2.0                   |
+| **Frontend Framework** | Next.js 16.2.6                 |
 | **Language**           | TypeScript 5.9.3               |
-| **Build Tool**         | Vite 7.3.1                     |
 | **Web3 Libraries**     | Viem 2.46.2, Wagmi 2.19.5      |
 | **Wallet UI**          | RainbowKit 2.2.10              |
 | **Styling**            | Tailwind CSS v4.2.1            |
@@ -75,7 +75,7 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 | Category            | Technology                            |
 | ------------------- | ------------------------------------- |
-| **Framework**       | Hardhat 2.28.6                        |
+| **Framework**       | Hardhat 2.22.0                        |
 | **Language**        | Solidity 0.8.20                       |
 | **Library**         | OpenZeppelin Contracts 4.9.6, ERC721A |
 | **Testing**         | Hardhat + Chai + Ethers v6            |
@@ -109,17 +109,23 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 3. **Configure environment variables**
 
-   Create a `.env` file in the root directory:
+   Copy `.env.example` to `.env.local` and fill in your values:
 
    ```env
-   # Frontend
-   VITE_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
-   VITE_USE_WEBSOCKET=true
-   VITE_ALCHEMY_WS_URL=wss://eth-sepolia.g.alchemy.com/v2/your_api_key
-
-   # Smart Contract (for Sepolia deployment)
+   # Server-side only (DO NOT prefix with NEXT_PUBLIC_)
    PRIVATE_KEY=your_private_key_here
    SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+   ALCHEMY_API_KEY=your_alchemy_api_key
+   ALCHEMY_NETWORK=eth-sepolia
+
+   # Pinata IPFS (server-side only)
+   PINATA_JWT=your_pinata_jwt
+   PINATA_GATEWAY=https://ipfs.io/ipfs/
+
+   # Client-safe variables (MUST prefix with NEXT_PUBLIC_)
+   NEXT_PUBLIC_USE_WEBSOCKET=false
+   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_walletconnect_project_id
+   NEXT_PUBLIC_CONTRACT_ADDRESS=your_contract_address
    ```
 
 4. **Compile smart contracts**
@@ -142,7 +148,7 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 7. **Open your browser**
 
-   Navigate to `http://localhost:5173`
+   Navigate to `http://localhost:3000`
 
 ---
 
@@ -152,31 +158,31 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 | Command                   | Description                   |
 | ------------------------- | ----------------------------- |
-| `npm run dev`             | Start development server      |
-| `npm run build`           | Build for production          |
-| `npm run lint`            | Run ESLint                    |
-| `npm run lint:fix`        | Auto-fix linting issues       |
-| `npm run format`          | Format code with Prettier     |
-| `npm run type-check`      | Run TypeScript type checking  |
-| `npm run test:frontend`   | Run frontend tests (Vitest)   |
-| `npm run test:watch`      | Run tests in watch mode       |
-| `npm run test:ui`         | Run tests with UI             |
-| `npm run test:coverage`   | Generate test coverage report |
-| `npm run test:components` | Run component tests           |
-| `npm run test:hooks`      | Run hook tests                |
-| `npm run test:services`   | Run service tests             |
-| `npm run predeploy`       | Full pre-deployment check     |
+| `npm run dev`            | Start development server      |
+| `npm run build`          | Build for production          |
+| `npm run start`          | Start production server       |
+| `npm run lint`           | Run ESLint                    |
+| `npm run lint:fix`       | Auto-fix linting issues       |
+| `npm run format`         | Format code with Prettier     |
+| `npm run type-check`     | Run TypeScript type checking  |
+| `npm run test:frontend`  | Run frontend tests (Vitest)   |
+| `npm run test:watch`     | Run tests in watch mode       |
+| `npm run test:ui`        | Run tests with UI             |
+| `npm run test:coverage`  | Generate test coverage report |
+| `npm run test:components`| Run component tests           |
+| `npm run test:hooks`     | Run hook tests                |
+| `npm run test:services`  | Run service tests             |
 
 ### Smart Contract Scripts
 
 | Command                  | Description                  |
 | ------------------------ | ---------------------------- |
-| `npm run compile`        | Compile Solidity contracts   |
-| `npm run clean`          | Clean Hardhat artifacts      |
-| `npm run test:contract`  | Run contract tests (Hardhat) |
-| `npm run typechain`      | Generate TypeScript types    |
-| `npm run deploy:local`   | Deploy to local Hardhat node |
-| `npm run deploy:sepolia` | Deploy to Sepolia testnet    |
+| `npm run compile`       | Compile Solidity contracts   |
+| `npm run clean`         | Clean Hardhat artifacts      |
+| `npm run test:contract` | Run contract tests (Hardhat) |
+| `npm run typechain`     | Generate TypeScript types    |
+| `npm run deploy:local`  | Deploy to local Hardhat node |
+| `npm run deploy:sepolia`| Deploy to Sepolia testnet    |
 
 ### Full Test Suite
 
@@ -190,49 +196,53 @@ npm run test  # Runs both contract and frontend tests
 
 ```
 ├── src/
+│   ├── app/                      # Next.js App Router
+│   │   ├── api/                  # API routes
+│   │   │   └── pinata/          # Pinata IPFS API
+│   │   ├── components/          # React components
+│   │   │   ├── nft/            # NFT-related components
+│   │   │   │   ├── NftMinter.tsx
+│   │   │   │   ├── NftGallery.tsx
+│   │   │   │   ├── NftCard.tsx
+│   │   │   │   ├── NFTCreator.tsx
+│   │   │   │   └── RecentMints.tsx
+│   │   │   ├── transaction/    # Transaction components
+│   │   │   │   └── TransactionHistory.tsx
+│   │   │   └── ui/             # Reusable UI components
+│   │   ├── config/             # App configuration
+│   │   │   ├── wagmi.ts       # Wagmi setup
+│   │   │   └── env.ts         # Environment variables
+│   │   ├── hooks/              # Custom React hooks
+│   │   │   ├── useNftMintedEvents.ts
+│   │   │   ├── useNftMintedEventsPolling.ts
+│   │   │   ├── useUserNFTHistory.ts
+│   │   │   └── useToast.ts
+│   │   ├── lib/                # Utilities and services
+│   │   │   ├── constants.ts
+│   │   │   └── services/       # External service integrations
+│   │   ├── providers/          # Context providers
+│   │   │   └── AppProviders.tsx
+│   │   ├── layout.tsx          # Root layout
+│   │   ├── page.tsx            # Main page
+│   │   └── globals.css         # Global styles
 │   ├── abi/                    # Smart contract ABIs
 │   ├── assets/                 # Static assets (images, icons)
-│   ├── components/             # React components
-│   │   ├── nft/               # NFT-related components
-│   │   │   ├── NftMinter.tsx  # Minting interface
-│   │   │   ├── NftGallery.tsx # User's NFT collection
-│   │   │   ├── NftCard.tsx    # Individual NFT display
-│   │   │   └── RecentMints.tsx# Live community mints
-│   │   ├── transaction/       # Transaction components
-│   │   │   └── TransactionHistory.tsx
-│   │   └── ui/                # Reusable UI components
-│   ├── config/                 # App configuration
-│   │   └── wagmi.ts           # Wagmi setup
 │   ├── contracts/             # Smart contract source files
 │   │   ├── MyNFT.sol          # ERC-721 NFT contract
 │   │   └── __tests__/         # Contract tests
 │   │       └── MyNFT.test.ts
-│   ├── hooks/                  # Custom React hooks
-│   │   ├── useNftMintedEvents.ts
-│   │   ├── useNftMintedEventsPolling.ts
-│   │   ├── useUserNFTHistory.ts
-│   │   └── useToast.ts
-│   ├── lib/                    # Utilities and constants
-│   │   └── constants.ts       # App-wide configuration
-│   ├── providers/              # Context providers
-│   │   └── AppProviders.tsx   # Centralized provider wrapper
 │   ├── scripts/                # Deployment scripts
 │   │   └── deploy.ts          # Multi-network deploy script
-│   ├── services/               # External service integrations
 │   ├── test/                   # Test utilities
-│   ├── types/                  # TypeScript type definitions
-│   ├── App.tsx                 # Main application component
-│   ├── main.tsx               # Entry point
-│   └── index.css              # Global styles
+│   └── types/                  # TypeScript type definitions
 ├── hardhat.config.ts           # Hardhat configuration
+├── next.config.ts              # Next.js configuration
 ├── tsconfig.json               # Root TypeScript config
-├── tsconfig.app.json           # Frontend TypeScript config
-├── tsconfig.hardhat.json       # Hardhat TypeScript config
-├── vite.config.ts              # Vite configuration
 ├── vitest.config.ts            # Vitest configuration
 ├── contract-address-local.json # Local deployment address
 ├── contract-address-sepolia.json # Sepolia deployment address
-└── .env                        # Environment variables
+├── .env.example                # Environment variables template
+└── .env.local                  # Local environment variables
 ```
 
 ---
@@ -296,7 +306,7 @@ npx hardhat test src/contracts/__tests__/MyNFT.test.ts
 #### Deploy to Sepolia Testnet
 
 1. Ensure you have:
-   - `PRIVATE_KEY` set in `.env`
+   - `PRIVATE_KEY` set in `.env.local`
    - Sepolia ETH in your wallet ([Get testnet ETH](https://sepoliafaucet.com/))
 
 2. Deploy to Sepolia:
@@ -310,9 +320,7 @@ npx hardhat test src/contracts/__tests__/MyNFT.test.ts
 ### Updating Frontend Contract Address
 
 After deployment, update the contract address in:
-
-- `src/config/wagmi.ts`
-- `src/abi/myNft.ts` (if ABI changed)
+- `.env.local` - `NEXT_PUBLIC_CONTRACT_ADDRESS`
 
 ---
 
@@ -320,7 +328,7 @@ After deployment, update the contract address in:
 
 ### Contract Configuration
 
-Located in `src/lib/constants.ts`:
+Located in `src/app/lib/constants.ts`:
 
 ```typescript
 export const CONTRACT_CONFIG = {
@@ -382,34 +390,38 @@ npm run test:coverage
 
 ## 🌐 Deployment
 
-### Pre-deployment Checklist
-
-```bash
-npm run predeploy
-```
-
-This command runs:
-
-- ✅ Production build
-- ✅ Linting
-- ✅ Type checking
-
 ### Build for Production
 
 ```bash
 npm run build
 ```
 
-The built files will be in the `dist/` directory.
+The built files will be in the `.next/` directory.
+
+### Deploy to Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Import the project in Vercel
+3. Add your environment variables in Vercel dashboard:
+   - `PRIVATE_KEY`
+   - `SEPOLIA_RPC_URL`
+   - `ALCHEMY_API_KEY`
+   - `ALCHEMY_NETWORK`
+   - `PINATA_JWT`
+   - `PINATA_GATEWAY`
+   - `NEXT_PUBLIC_USE_WEBSOCKET`
+   - `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`
+   - `NEXT_PUBLIC_CONTRACT_ADDRESS`
+4. Deploy!
 
 ### Hosting
 
-Deploy the `dist/` folder to any static hosting service:
+Deploy to any Next.js-compatible hosting:
 
 - **Vercel** (Recommended)
 - **Netlify**
-- **GitHub Pages**
-- **IPFS**
+- **AWS Amplify**
+- **Self-hosted**
 
 ---
 
@@ -462,6 +474,7 @@ transports: {
 - ✅ No private keys stored client-side
 - ✅ All transactions require user confirmation
 - ✅ Environment variables for sensitive data
+- ✅ Server-side secrets use proper prefixes (no NEXT_PUBLIC_)
 - ✅ HTTPS required for production
 - ✅ Input validation on all user inputs
 - ✅ ReentrancyGuard on smart contract
@@ -501,6 +514,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [RainbowKit](https://rainbowkit.com/) - Wallet Connection UI
 - [TanStack Query](https://tanstack.com/query) - Data Management
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
+- [Next.js](https://nextjs.org/) - React Framework
 
 ---
 
