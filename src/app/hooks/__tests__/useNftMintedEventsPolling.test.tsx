@@ -96,4 +96,19 @@ describe("useNftMintedEventsPolling", () => {
     expect(result.current.isLoading).toBeDefined();
     expect(result.current.error).toBeDefined();
   });
+
+  it("should accept custom pollInterval and maxRange parameters", async () => {
+    const { result } = renderHook(
+      () => useNftMintedEventsPolling({
+        contractAddress: mockContractAddress,
+        pollInterval: 1000,
+        maxRange: 20,
+      }),
+      { wrapper },
+    );
+
+    // Hook should initialize
+    expect(result.current.recentMints).toBeDefined();
+    expect(result.current.isLoading).toBeDefined();
+  });
 });

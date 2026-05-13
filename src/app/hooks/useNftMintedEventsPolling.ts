@@ -26,6 +26,7 @@ interface NftMintedLog {
   args: {
     minter?: Hex;
     tokenId?: bigint;
+    tokenURI?: string;
   };
   transactionHash: Hex;
   blockNumber: bigint;
@@ -53,7 +54,7 @@ export const useNftMintedEventsPolling = ({
         const logs = (await publicClient.getLogs({
           address: contractAddress,
           event: parseAbiItem(
-            "event NFTMinted(address indexed minter, uint256 indexed tokenId)",
+            "event NFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI)",
           ),
           args: {},
           fromBlock,
