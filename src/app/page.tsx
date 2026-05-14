@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { NftMinter } from '@/components/nft/NftMinter';
@@ -13,8 +13,15 @@ import { Button } from '@/components/ui';
 
 export default function Home() {
   const { isConnected } = useAccount();
+  const [mounted, setMounted] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [mintMode, setMintMode] = useState<'simple' | 'creator'>('simple');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isUserConnected = mounted && isConnected;
 
   const githubUrl = APP_CONFIG.repository;
   const twitterUrl = APP_CONFIG.twitter;
@@ -24,17 +31,19 @@ export default function Home() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <header className="border-b border-gray-800 sticky top-0 bg-gray-900/95 backdrop-blur z-50">
-          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center font-bold text-white">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center gap-2">
+            <div className="flex items-center gap-3 max-w-[60%] sm:max-w-[75%]">
+              <div className="shrink-0 w-10 h-10 bg-linear-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center font-bold text-white">
                 NFT
               </div>
-              <div>
-                <h1 className="text-xl font-bold">{APP_CONFIG.name}</h1>
-                <p className="text-xs text-gray-400">{APP_CONFIG.description}</p>
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold truncate">{APP_CONFIG.name}</h1>
+                <p className="text-xs text-gray-400 truncate hidden md:block">{APP_CONFIG.description}</p>
               </div>
             </div>
-            <ConnectButton showBalance={false} chainStatus="full" />
+            <div className="shrink-0 z-10 relative">
+              <ConnectButton showBalance={false} chainStatus="icon" />
+            </div>
           </div>
         </header>
 
@@ -82,32 +91,33 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Mode Switcher */}
-            {isConnected && (
-              <div className="flex gap-2 mb-6">
-                <Button
-                  variant={mintMode === "simple" ? "primary" : "secondary"}
-                  onClick={() => setMintMode("simple")}
-                  className="flex-1"
-                >
-                  Simple Mint
-                </Button>
-                <Button
-                  variant={mintMode === "creator" ? "primary" : "secondary"}
-                  onClick={() => setMintMode("creator")}
-                  className="flex-1"
-                >
-                  NFT Creator (IPFS)
-                </Button>
-              </div>
-            )}
+            {isUserConnected ? (
+              <>
+                {/* Mode Switcher */}
+                <div className="flex gap-2 mb-6">
+                  <Button
+                    variant={mintMode === "simple" ? "primary" : "secondary"}
+                    onClick={() => setMintMode("simple")}
+                    className="flex-1"
+                  >
+                    Simple Mint
+                  </Button>
+                  <Button
+                    variant={mintMode === "creator" ? "primary" : "secondary"}
+                    onClick={() => setMintMode("creator")}
+                    className="flex-1"
+                  >
+                    NFT Creator (IPFS)
+                  </Button>
+                </div>
 
-            {isConnected ? (
-              mintMode === "simple" ? (
-                <NftMinter onMintSuccess={() => setRefreshKey((k) => k + 1)} />
-              ) : (
-                <NFTCreator onMintSuccess={() => setRefreshKey((k) => k + 1)} />
-              )
+                {/* Minting Content */}
+                {mintMode === "simple" ? (
+                  <NftMinter onMintSuccess={() => setRefreshKey((k) => k + 1)} />
+                ) : (
+                  <NFTCreator onMintSuccess={() => setRefreshKey((k) => k + 1)} />
+                )}
+              </>
             ) : (
               <div className="text-center py-12 bg-gray-800/50 rounded-xl border border-gray-700">
                 <p className="text-gray-400 mb-4">
@@ -118,7 +128,7 @@ export default function Home() {
           </section>
 
           {/* Connected User Sections */}
-          {isConnected && (
+          {isUserConnected && (
             <>
               {/* Recent Mints (Live) */}
               <section className="mb-12">
