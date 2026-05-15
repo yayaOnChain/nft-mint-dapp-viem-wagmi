@@ -7,6 +7,7 @@ interface EnvConfig {
   walletConnectProjectId: string;
   contractAddress: `0x${string}`;
   useWebSocket: boolean;
+  sepoliaRpcUrl: string;
 }
 
 // Client-safe variables (NEXT_PUBLIC_ prefix)
@@ -14,6 +15,7 @@ const env: EnvConfig = {
   walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "",
   contractAddress: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "") as `0x${string}`,
   useWebSocket: process.env.NEXT_PUBLIC_USE_WEBSOCKET === "true",
+  sepoliaRpcUrl: process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "",
 };
 
 // Validate required client environment variables
@@ -31,4 +33,5 @@ export const {
   walletConnectProjectId,
   contractAddress,
   useWebSocket,
+  sepoliaRpcUrl,
 } = env;
