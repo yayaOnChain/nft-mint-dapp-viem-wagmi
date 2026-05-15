@@ -13,6 +13,7 @@ vi.mock("@/config/env", () => ({
     alchemyNetwork: "eth-sepolia",
     useWebSocket: false,
     alchemyWsUrl: undefined,
+    sepoliaRpcUrl: "test-sepolia-rpc-url",
   },
   walletConnectProjectId: "test-project-id",
   contractAddress: "0x1234567890123456789012345678901234567890",
@@ -20,6 +21,7 @@ vi.mock("@/config/env", () => ({
   alchemyNetwork: "eth-sepolia",
   useWebSocket: false,
   alchemyWsUrl: undefined,
+  sepoliaRpcUrl: "test-sepolia-rpc-url",
 }));
 
 describe("AppProviders", () => {
