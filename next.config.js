@@ -1,6 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  transpilePackages: [
+    'viem',
+    'wagmi',
+    '@wagmi/core',
+    '@rainbow-me/rainbowkit',
+  ],
+
+  experimental: {
+    esmExternals: false,
+  },
+
   images: {
     remotePatterns: [
       {
