@@ -30,7 +30,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <header className="border-b border-gray-800 sticky top-0 bg-gray-900/95 backdrop-blur z-50">
+        <header className="border-b border-gray-800 sticky top-0 bg-gray-900/95 transform-gpu z-50">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center gap-2">
             <div className="flex items-center gap-3 max-w-[60%] sm:max-w-[75%]">
               <div className="shrink-0 w-10 h-10 bg-linear-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center font-bold text-white">
@@ -42,7 +42,71 @@ export default function Home() {
               </div>
             </div>
             <div className="shrink-0 z-10 relative">
-              <ConnectButton showBalance={false} chainStatus="icon" />
+              <ConnectButton.Custom>
+                {({
+                  account,
+                  chain,
+                  openAccountModal,
+                  openChainModal,
+                  openConnectModal,
+                  mounted,
+                }) => {
+                  const connected = mounted && account && chain;
+
+                  return (
+                    <div>
+                      {(() => {
+                        if (!mounted) {
+                          return (
+                            <button
+                              type="button"
+                              disabled
+                              className="bg-gray-800 text-gray-400 font-bold py-2 px-4 rounded-xl border border-gray-700 text-sm whitespace-nowrap animate-pulse cursor-not-allowed"
+                            >
+                              Loading...
+                            </button>
+                          );
+                        }
+
+                        if (!connected) {
+                          return (
+                            <button
+                              onClick={openConnectModal}
+                              type="button"
+                              className="bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-all text-sm whitespace-nowrap"
+                            >
+                              Connect Wallet
+                            </button>
+                          );
+                        }
+
+                        if (chain.unsupported) {
+                          return (
+                            <button
+                              onClick={openChainModal}
+                              type="button"
+                              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-all text-sm whitespace-nowrap"
+                            >
+                              Wrong network
+                            </button>
+                          );
+                        }
+
+                        return (
+                          <button
+                            onClick={openAccountModal}
+                            type="button"
+                            className="bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-xl border border-gray-700 transition-all text-sm flex items-center gap-2 whitespace-nowrap"
+                          >
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            {account.displayName}
+                          </button>
+                        );
+                      })()}
+                    </div>
+                  );
+                }}
+              </ConnectButton.Custom>
             </div>
           </div>
         </header>
