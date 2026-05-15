@@ -19,10 +19,7 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-    console.log('mounted set to true');
   }, []);
-
-  console.log('render - mounted:', mounted, 'isConnected:', isConnected);
 
   const isUserConnected = isConnected;
 
