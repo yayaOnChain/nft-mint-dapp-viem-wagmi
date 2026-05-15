@@ -10,7 +10,7 @@ export const config = getDefaultConfig({
   appName: "MyProjectNFT",
   projectId: walletConnectProjectId,
   chains: [/* mainnet, */ sepolia],
-  ssr: false,
+  ssr: true,
 
   transports: {
     // [mainnet.id]: http("https://cloudflare-eth.com"),
