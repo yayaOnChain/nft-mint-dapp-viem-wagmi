@@ -15,6 +15,13 @@ const nextConfig = {
       },
     ],
   },
+
+  transpilePackages: [
+    '@rainbow-me/rainbowkit',
+    'wagmi',
+    'viem',
+    '@adraffy/ens-normalize'
+  ],
 };
 
 module.exports = nextConfig;
