@@ -43,3 +43,6 @@ contract-address-*.json
 
 # Ignore Typescript build info
 *.tsbuildinfo
+
+# Testing
+coverage
