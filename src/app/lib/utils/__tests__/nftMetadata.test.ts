@@ -281,6 +281,92 @@ describe("nftMetadata utilities", () => {
         "Failed to load image"
       );
     });
+
+    it("should reject when canvas context is null", async () => {
+      const file = new File(["content"], "test.png", { type: "image/png" });
+
+      vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+
+      const MockImage = vi.fn().mockImplementation(function (this: HTMLImageElement) {
+        this.onload = null;
+        this.width = 100;
+        this.height = 100;
+
+        setTimeout(() => {
+          if (this.onload) this.onload(new Event("load"));
+        }, 0);
+        return this;
+      }) as unknown as new () => HTMLImageElement;
+
+      vi.stubGlobal("Image", MockImage);
+
+      await expect(compressImage(file)).rejects.toThrow(
+        "Failed to get canvas context"
+      );
+    });
+
+    it("should reject when compression produces no blob", async () => {
+      const file = new File(["content"], "test.png", { type: "image/png" });
+
+      const mockContext = { drawImage: vi.fn() } as unknown as CanvasRenderingContext2D;
+
+      vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(mockContext);
+      vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(
+        (callback: (blob: Blob | null) => void) => {
+          callback(null);
+        }
+      );
+
+      const MockImage = vi.fn().mockImplementation(function (this: HTMLImageElement) {
+        this.onload = null;
+        this.width = 100;
+        this.height = 100;
+
+        setTimeout(() => {
+          if (this.onload) this.onload(new Event("load"));
+        }, 0);
+        return this;
+      }) as unknown as new () => HTMLImageElement;
+
+      vi.stubGlobal("Image", MockImage);
+
+      await expect(compressImage(file)).rejects.toThrow(
+        "Failed to compress image"
+      );
+    });
+
+    it("should not resize image when width is within maxWidth", async () => {
+      const file = new File(["content"], "test.png", { type: "image/png" });
+
+      const mockContext = {
+        drawImage: vi.fn(),
+      } as unknown as CanvasRenderingContext2D;
+
+      vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(mockContext);
+      vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(
+        (callback: (blob: Blob | null) => void) => {
+          callback(new Blob(["compressed"], { type: "image/jpeg" }));
+        }
+      );
+
+      const MockImage = vi.fn().mockImplementation(function (this: HTMLImageElement) {
+        this.onload = null;
+        this.width = 800;
+        this.height = 600;
+
+        setTimeout(() => {
+          if (this.onload) this.onload(new Event("load"));
+        }, 0);
+        return this;
+      }) as unknown as new () => HTMLImageElement;
+
+      vi.stubGlobal("Image", MockImage);
+
+      const result = await compressImage(file, 1920, 0.8);
+
+      expect(result).toBeInstanceOf(File);
+      expect(mockContext.drawImage).toHaveBeenCalled();
+    });
   });
 
   describe("createImagePreview", () => {
