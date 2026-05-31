@@ -109,6 +109,45 @@ describe("ipfsClient", () => {
 
       await expect(uploadFileToIPFS(mockFile)).rejects.toThrow("Invalid JWT token");
     });
+
+    it("should use data.message as fallback error message", async () => {
+      const mockFile = new File(["test"], "test.png", { type: "image/png" });
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ message: "Server error occurred" }),
+      });
+
+      await expect(uploadFileToIPFS(mockFile)).rejects.toThrow("Server error occurred");
+    });
+
+    it("should use default error message when no error details provided", async () => {
+      const mockFile = new File(["test"], "test.png", { type: "image/png" });
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({}),
+      });
+
+      await expect(uploadFileToIPFS(mockFile)).rejects.toThrow("Failed to upload to IPFS: 500");
+    });
+
+    it("should log error on upload failure", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockFile = new File(["test"], "test.png", { type: "image/png" });
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({ error: "Unauthorized" }),
+      });
+
+      await expect(uploadFileToIPFS(mockFile)).rejects.toThrow("Unauthorized");
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
   });
 
   describe("uploadMetadataToIPFS", () => {
@@ -180,6 +219,39 @@ describe("ipfsClient", () => {
       await expect(uploadMetadataToIPFS(mockMetadata)).rejects.toThrow(
         "Invalid metadata format"
       );
+    });
+
+    it("should use data.message as fallback error message for metadata", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        json: async () => ({ message: "Validation failed" }),
+      });
+
+      await expect(uploadMetadataToIPFS(mockMetadata)).rejects.toThrow("Validation failed");
+    });
+
+    it("should use default error message for metadata when no details provided", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: "" }),
+      });
+
+      await expect(uploadMetadataToIPFS(mockMetadata)).rejects.toThrow("Failed to upload metadata to IPFS: 500");
+    });
+
+    it("should log error on metadata upload failure", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: "Bad request" }),
+      });
+
+      await expect(uploadMetadataToIPFS(mockMetadata)).rejects.toThrow("Bad request");
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
     });
   });
 
@@ -307,6 +379,32 @@ describe("ipfsClient", () => {
       expect(result.metadataUrl).toBe(
         "https://custom.gateway/ipfs/QmMetadataHash456"
       );
+    });
+
+    it("should use ipfs:// URL when gatewayUrl is not provided", async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            IpfsHash: "QmImageHash123",
+            PinSize: 2048,
+            Timestamp: "2024-01-01T00:00:00.000Z",
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            IpfsHash: "QmMetadataHash456",
+            PinSize: 512,
+            Timestamp: "2024-01-01T00:00:00.000Z",
+          }),
+        });
+
+      const result = await uploadNFTToIPFS(mockImageFile, mockMetadata);
+
+      expect(result.imageUrl).toBe("ipfs://QmImageHash123");
+      expect(result.metadataUrl).toBe("ipfs://QmMetadataHash456");
     });
   });
 
