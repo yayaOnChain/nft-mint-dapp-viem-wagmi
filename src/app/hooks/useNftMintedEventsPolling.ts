@@ -48,10 +48,8 @@ export const useNftMintedEventsPolling = ({
    */
   const fetchEventsInRange = useCallback(
     async (fromBlock: bigint, toBlock: bigint) => {
-      if (!publicClient) return [];
-
       try {
-        const logs = (await publicClient.getLogs({
+        const logs = (await publicClient!.getLogs({
           address: contractAddress,
           event: parseAbiItem(
             "event NFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI)",
@@ -74,8 +72,6 @@ export const useNftMintedEventsPolling = ({
    * Process mint logs and update state
    */
   const processMint = useCallback((logs: NftMintedLog[]) => {
-    if (logs.length === 0) return;
-
     const newMints: MintEventData[] = logs
       .filter((log) => log.args.minter && log.args.tokenId !== undefined)
       .map((log) => ({
@@ -133,9 +129,6 @@ export const useNftMintedEventsPolling = ({
 
           const fromBlockNum = previousBlock + processedBlocks + BigInt(1);
           const toBlockNum = fromBlockNum + BigInt(currentRange) - BigInt(1);
-
-          // Safe check to not go negative
-          if (fromBlockNum > currentBlock) break;
 
           const rangeLogs = await fetchEventsInRange(fromBlockNum, toBlockNum);
           accumulatedLogs.push(...rangeLogs);
