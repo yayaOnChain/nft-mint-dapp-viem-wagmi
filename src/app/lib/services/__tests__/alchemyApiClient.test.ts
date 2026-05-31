@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AlchemyApiClient } from '../alchemyApiClient';
+import { AlchemyApiClient, getAlchemyClient } from '../alchemyApiClient';
 import type {
   AlchemyNFTResponse,
   AlchemyTransferResponse,
@@ -48,6 +48,15 @@ describe('AlchemyApiClient', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe('getAlchemyClient', () => {
+    it('should return the same singleton instance', () => {
+      const client1 = getAlchemyClient();
+      const client2 = getAlchemyClient();
+      expect(client1).toBe(client2);
+      expect(client1).toBeInstanceOf(AlchemyApiClient);
+    });
   });
 
   describe('getNFTs', () => {
@@ -120,6 +129,41 @@ describe('AlchemyApiClient', () => {
       expect(fetch).toHaveBeenCalledWith(
         expect.stringContaining('pageSize=100'),
       );
+    });
+
+    it('should handle response with no totalCount', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          ownedNfts: [],
+        }),
+      });
+
+      const result = await alchemyClient.getNFTs({ owner: '0xUserAddress' });
+
+      expect(result.totalCount).toBe(0);
+    });
+
+    it('should use empty array when ownedNfts is missing', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      });
+
+      const result = await alchemyClient.getNFTs({ owner: '0xUserAddress' });
+
+      expect(result.nfts).toEqual([]);
+    });
+
+    it('should handle API error with non-object value', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ error: 'just a string error' }),
+      });
+
+      await expect(
+        alchemyClient.getNFTs({ owner: '0xUserAddress' }),
+      ).rejects.toThrow('Unknown API error');
     });
   });
 
@@ -207,6 +251,150 @@ describe('AlchemyApiClient', () => {
       });
 
       expect(result.transfers[0].tokenId).toBe('5');
+    });
+
+    it('should parse hex blockTimestamp', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          result: {
+            transfers: [
+              {
+                tokenId: '0x1',
+                hash: '0xabc',
+                blockTimestamp: '0x65d0c0a0',
+                blockNum: '0x123456',
+                from: '0xfrom',
+                to: '0xto',
+                type: 'mint',
+              },
+            ],
+          },
+        }),
+      });
+
+      const result = await alchemyClient.getAssetTransfers({
+        address: '0xUserAddress',
+        contractAddress: '0xContract',
+        limit: 10,
+      });
+
+      expect(result.transfers[0].timestamp).toBeGreaterThan(0);
+    });
+
+    it('should default timestamp to 0 when blockTimestamp is missing', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          result: {
+            transfers: [
+              {
+                tokenId: '0x1',
+                hash: '0xabc',
+                blockNum: '0x123456',
+                from: '0xfrom',
+                to: '0xto',
+                type: 'mint',
+              },
+            ],
+          },
+        }),
+      });
+
+      const result = await alchemyClient.getAssetTransfers({
+        address: '0xUserAddress',
+        contractAddress: '0xContract',
+        limit: 10,
+      });
+
+      expect(result.transfers[0].timestamp).toBe(0);
+    });
+
+    it('should default timestamp to 0 for unknown format', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          result: {
+            transfers: [
+              {
+                tokenId: '0x1',
+                hash: '0xabc',
+                blockTimestamp: 'not-a-timestamp',
+                blockNum: '0x123456',
+                from: '0xfrom',
+                to: '0xto',
+                type: 'mint',
+              },
+            ],
+          },
+        }),
+      });
+
+      const result = await alchemyClient.getAssetTransfers({
+        address: '0xUserAddress',
+        contractAddress: '0xContract',
+        limit: 10,
+      });
+
+      expect(result.transfers[0].timestamp).toBe(0);
+    });
+
+    it('should return pageKey from response', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          result: {
+            transfers: [
+              {
+                tokenId: '0x1',
+                hash: '0xabc',
+                blockTimestamp: '2024-01-15T10:30:00.000Z',
+                blockNum: '0x123456',
+                from: '0xfrom',
+                to: '0xto',
+                type: 'mint',
+              },
+            ],
+            pageKey: 'next-page',
+          },
+        }),
+      });
+
+      const result = await alchemyClient.getAssetTransfers({
+        address: '0xUserAddress',
+        contractAddress: '0xContract',
+        limit: 10,
+      });
+
+      expect(result.pageKey).toBe('next-page');
+    });
+
+    it('should default to "transfer" when type is missing', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          result: {
+            transfers: [
+              {
+                tokenId: '0x1',
+                hash: '0xabc',
+                blockTimestamp: '2024-01-15T10:30:00.000Z',
+                blockNum: '0x123456',
+                from: '0xfrom',
+                to: '0xto',
+              },
+            ],
+          },
+        }),
+      });
+
+      const result = await alchemyClient.getAssetTransfers({
+        address: '0xUserAddress',
+        contractAddress: '0xContract',
+        limit: 10,
+      });
+
+      expect(result.transfers[0].type).toBe('transfer');
     });
   });
 
