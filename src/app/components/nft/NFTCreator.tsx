@@ -377,7 +377,7 @@ export const NFTCreator = ({ onMintSuccess }: NFTCreatorProps) => {
                       variant="secondary"
                       size="sm"
                       onClick={() => {
-                        if (imagePreview) revokeImagePreview(imagePreview);
+                        revokeImagePreview(imagePreview);
                         setImageFile(null);
                         setImagePreview("");
                       }}
