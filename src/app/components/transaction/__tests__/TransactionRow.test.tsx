@@ -406,6 +406,50 @@ describe("TransactionRow", () => {
       const statusSpan = container.querySelector("td:last-child span");
       expect(statusSpan).toHaveClass("text-red-400");
     });
+
+    it("should apply gray color for unknown status", () => {
+      const unknownStatusTransaction = {
+        ...mockTransaction,
+        status: "unknown" as TransactionHistoryItem["status"],
+      };
+
+      const { container } = render(
+        <table>
+          <tbody>
+            <TransactionRow
+              transaction={unknownStatusTransaction}
+              chainId={chainId}
+            />
+          </tbody>
+        </table>,
+      );
+
+      const statusSpan = container.querySelector("td:last-child span");
+      expect(statusSpan).toHaveClass("text-gray-400");
+    });
+
+    it("should not show any status icon for unknown status", () => {
+      const unknownStatusTransaction = {
+        ...mockTransaction,
+        status: "unknown" as TransactionHistoryItem["status"],
+      };
+
+      const { container } = render(
+        <table>
+          <tbody>
+            <TransactionRow
+              transaction={unknownStatusTransaction}
+              chainId={chainId}
+            />
+          </tbody>
+        </table>,
+      );
+
+      const statusSpan = container.querySelector("td:last-child span");
+      expect(statusSpan?.textContent).not.toContain("✓");
+      expect(statusSpan?.textContent).not.toContain("⏳");
+      expect(statusSpan?.textContent).not.toContain("✗");
+    });
   });
 
   describe("address formatting", () => {

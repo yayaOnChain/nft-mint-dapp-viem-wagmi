@@ -103,7 +103,9 @@ export const TransactionRow = ({
             {formatAddress(transaction.from)}
           </a>
         ) : (
-          <span className="text-gray-500">-</span>
+          <span className="text-gray-500">
+            {formatAddress(transaction.from)}
+          </span>
         )}
       </td>
 
@@ -119,7 +121,9 @@ export const TransactionRow = ({
             {formatAddress(transaction.to)}
           </a>
         ) : (
-          <span className="text-gray-500">-</span>
+          <span className="text-gray-500">
+            {formatAddress(transaction.to)}
+          </span>
         )}
       </td>
 
