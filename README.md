@@ -47,7 +47,7 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
 
 - ⚡ **Real-time Events** - WebSocket support for instant transaction confirmations
 - 🎯 **Multi-Chain** - Support for Ethereum Mainnet and Sepolia testnet
-- 🧪 **Test Coverage** - Contract tests (Hardhat) + frontend tests (Vitest)
+- 🧪 **Test Coverage** - Contract tests (Hardhat) + comprehensive frontend tests across components, hooks, services, and utilities (Vitest + Testing Library)
 - 🎨 **Modern UI** - Beautiful dark theme with Tailwind CSS v4
 - 📱 **Responsive Design** - Mobile-first, works on all devices
 - 🔐 **Type Safe** - Full TypeScript support with strict type checking
@@ -198,34 +198,61 @@ npm run test  # Runs both contract and frontend tests
 ├── src/
 │   ├── app/                      # Next.js App Router
 │   │   ├── api/                  # API routes
+│   │   │   ├── alchemy/         # Alchemy API proxy
+│   │   │   │   └── route.ts
 │   │   │   └── pinata/          # Pinata IPFS API
+│   │   │       └── route.ts
 │   │   ├── components/          # React components
 │   │   │   ├── nft/            # NFT-related components
+│   │   │   │   ├── __tests__/  # Component tests
 │   │   │   │   ├── NftMinter.tsx
 │   │   │   │   ├── NftGallery.tsx
 │   │   │   │   ├── NftCard.tsx
 │   │   │   │   ├── NFTCreator.tsx
 │   │   │   │   └── RecentMints.tsx
 │   │   │   ├── transaction/    # Transaction components
-│   │   │   │   └── TransactionHistory.tsx
+│   │   │   │   ├── __tests__/
+│   │   │   │   ├── TransactionHistory.tsx
+│   │   │   │   └── TransactionRow.tsx
 │   │   │   └── ui/             # Reusable UI components
+│   │   │       ├── __tests__/
+│   │   │       ├── Button.tsx
+│   │   │       ├── Card.tsx
+│   │   │       ├── index.ts
+│   │   │       └── Skeleton.tsx
 │   │   ├── config/             # App configuration
-│   │   │   ├── wagmi.ts       # Wagmi setup
-│   │   │   └── env.ts         # Environment variables
+│   │   │   ├── __tests__/
+│   │   │   ├── env.ts
+│   │   │   └── wagmi.ts
 │   │   ├── hooks/              # Custom React hooks
+│   │   │   ├── __tests__/
+│   │   │   ├── index.ts
 │   │   │   ├── useNftMintedEvents.ts
 │   │   │   ├── useNftMintedEventsPolling.ts
-│   │   │   ├── useUserNFTHistory.ts
-│   │   │   └── useToast.ts
+│   │   │   ├── useNftMintedEventsUnified.ts
+│   │   │   ├── useToast.ts
+│   │   │   └── useUserNFTHistory.ts
 │   │   ├── lib/                # Utilities and services
+│   │   │   ├── __tests__/
 │   │   │   ├── constants.ts
+│   │   │   ├── utils.ts
+│   │   │   ├── utils/          # Utility modules
+│   │   │   │   ├── __tests__/
+│   │   │   │   └── nftMetadata.ts
 │   │   │   └── services/       # External service integrations
+│   │   │       ├── __tests__/
+│   │   │       ├── alchemyApiClient.ts
+│   │   │       ├── contractService.ts
+│   │   │       ├── ipfsClient.ts
+│   │   │       └── ipfsService.ts
 │   │   ├── providers/          # Context providers
+│   │   │   ├── __tests__/
 │   │   │   └── AppProviders.tsx
 │   │   ├── layout.tsx          # Root layout
 │   │   ├── page.tsx            # Main page
 │   │   └── globals.css         # Global styles
 │   ├── abi/                    # Smart contract ABIs
+│   │   └── myNft.ts
 │   ├── assets/                 # Static assets (images, icons)
 │   ├── contracts/             # Smart contract source files
 │   │   ├── MyNFT.sol          # ERC-721 NFT contract
@@ -233,11 +260,14 @@ npm run test  # Runs both contract and frontend tests
 │   │       └── MyNFT.test.ts
 │   ├── scripts/                # Deployment scripts
 │   │   └── deploy.ts          # Multi-network deploy script
-│   ├── test/                   # Test utilities
+│   ├── test/                   # Test setup & utilities
+│   │   ├── mockData.ts
+│   │   └── setup.ts
 │   └── types/                  # TypeScript type definitions
 ├── hardhat.config.ts           # Hardhat configuration
 ├── next.config.ts              # Next.js configuration
 ├── tsconfig.json               # Root TypeScript config
+├── tsconfig.test.json          # Test TypeScript config
 ├── vitest.config.ts            # Vitest configuration
 ├── contract-address-local.json # Local deployment address
 ├── contract-address-sepolia.json # Sepolia deployment address
@@ -367,10 +397,10 @@ Run specific test categories:
 # Contract tests (Hardhat)
 npm run test:contract
 
-# Frontend tests (Vitest)
+# Frontend tests (Vitest) - all tests
 npm run test:frontend
 
-# Component tests
+# Component tests (NFT, Transaction, UI)
 npm run test:components
 
 # Hook tests
@@ -385,6 +415,8 @@ Generate coverage report:
 ```bash
 npm run test:coverage
 ```
+
+**Test files** span across components, hooks, services, utilities, configuration, and providers — with shared mock data and test setup in `src/test/`.
 
 ---
 
