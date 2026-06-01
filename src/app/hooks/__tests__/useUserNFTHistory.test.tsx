@@ -151,6 +151,16 @@ describe('useUserNFTHistory', () => {
         expect(result.current.error).toBe('API Error');
       });
     });
+
+    it('should handle non-Error API rejection', async () => {
+      mockAlchemyApiInstance.getNFTs.mockRejectedValue('Something broke');
+
+      const { result } = renderHook(() => useUserNFTHistory(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.error).toBe('Failed to fetch NFT history');
+      });
+    });
   });
 
   describe('pagination', () => {
