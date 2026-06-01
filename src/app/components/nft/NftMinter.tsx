@@ -327,18 +327,16 @@ export const NftMinter = ({ onMintSuccess }: NftMinterProps) => {
         {/* Mint Button */}
         <Button
           onClick={handleMint}
-          disabled={!canMint || isPending || isConfirming || isLoadingData}
+          disabled={!canMint || isPending || isConfirming}
           isLoading={isPending || isConfirming}
           className="w-full"
           size="lg"
         >
-          {isLoadingData
-            ? "Loading..."
-            : isPending
-              ? "Confirm in Wallet..."
-              : isConfirming
-                ? "Confirming..."
-                : "Mint NFT"}
+          {isPending
+            ? "Confirm in Wallet..."
+            : isConfirming
+              ? "Confirming..."
+              : "Mint NFT"}
         </Button>
 
         {/* User Info */}
