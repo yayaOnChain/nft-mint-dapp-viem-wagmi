@@ -134,6 +134,20 @@ describe("RecentMints", () => {
       expect(screen.getByText("Fetching latest events...")).toBeInTheDocument();
     });
 
+    it("should default isLoading to false when property is not in hook result", () => {
+      vi.mocked(useNftMintedEventsUnified).mockReturnValue({
+        recentMints: [],
+        error: null,
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
+
+      const { container } = render(<RecentMints />, { wrapper });
+
+      expect(container.querySelector(".bg-green-500")).not.toBeNull();
+      expect(
+        screen.queryByText("Fetching latest events..."),
+      ).not.toBeInTheDocument();
+    });
+
     it("should display yellow pulse indicator when loading", () => {
       vi.mocked(useNftMintedEventsUnified).mockReturnValue({
         recentMints: [],
@@ -186,6 +200,17 @@ describe("RecentMints", () => {
       expect(
         screen.getByText(/Using 10-block range limit \(Free Tier\)/i),
       ).toBeInTheDocument();
+    });
+
+    it("should default error to null when property is not in hook result", () => {
+      vi.mocked(useNftMintedEventsUnified).mockReturnValue({
+        recentMints: [],
+        isLoading: false,
+      } as unknown as ReturnType<typeof useNftMintedEventsUnified>);
+
+      render(<RecentMints />, { wrapper });
+
+      expect(screen.queryByText(/⚠️/i)).not.toBeInTheDocument();
     });
 
     it("should not show error message when error is null", () => {
