@@ -6,6 +6,7 @@ interface UsePollingEventsProps {
   contractAddress: `0x${string}`;
   pollInterval?: number; // in milliseconds
   maxRange?: number; // Max blocks per request (default: 10 for Alchemy free tier)
+  requestTimeout?: number; // RPC request timeout in ms (default: 10000)
 }
 
 /**
@@ -36,6 +37,7 @@ export const useNftMintedEventsPolling = ({
   contractAddress,
   pollInterval = 15000,
   maxRange = 10, // Critical: Limits for Alchemy Free Tier
+  requestTimeout = 10_000,
 }: UsePollingEventsProps) => {
   const [recentMints, setRecentMints] = useState<MintEventData[]>([]);
   const [lastBlock, setLastBlock] = useState<bigint | undefined>();
@@ -43,21 +45,29 @@ export const useNftMintedEventsPolling = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Fetch events from a specific block range safely
-   */
+  const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> =>
+    Promise.race([
+      promise,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Request timed out after ${ms}ms`)), ms),
+      ),
+    ]);
+
   const fetchEventsInRange = useCallback(
     async (fromBlock: bigint, toBlock: bigint) => {
       try {
-        const logs = (await publicClient!.getLogs({
-          address: contractAddress,
-          event: parseAbiItem(
-            "event NFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI)",
-          ),
-          args: {},
-          fromBlock,
-          toBlock,
-        })) as NftMintedLog[];
+        const logs = (await withTimeout(
+          publicClient!.getLogs({
+            address: contractAddress,
+            event: parseAbiItem(
+              "event NFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI)",
+            ),
+            args: {},
+            fromBlock,
+            toBlock,
+          }),
+        requestTimeout,
+      )) as NftMintedLog[];
 
         return logs;
       } catch (err) {
@@ -65,7 +75,7 @@ export const useNftMintedEventsPolling = ({
         throw err;
       }
     },
-    [publicClient, contractAddress],
+    [publicClient, contractAddress, requestTimeout],
   );
 
   /**
@@ -111,7 +121,10 @@ export const useNftMintedEventsPolling = ({
 
       try {
         // Get current latest block
-        const currentBlock = await publicClient.getBlockNumber();
+        const currentBlock = await withTimeout(
+          publicClient.getBlockNumber(),
+          requestTimeout,
+        );
 
         // Set initial lastBlock or use it for calculation
         const previousBlock = lastBlock || currentBlock;
@@ -174,6 +187,7 @@ export const useNftMintedEventsPolling = ({
     publicClient,
     lastBlock,
     maxRange,
+    requestTimeout,
     fetchEventsInRange,
     processMint,
   ]);

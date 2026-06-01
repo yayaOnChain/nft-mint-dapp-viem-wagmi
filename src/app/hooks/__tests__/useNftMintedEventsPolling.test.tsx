@@ -431,4 +431,57 @@ describe("useNftMintedEventsPolling", () => {
 
     vi.useRealTimers();
   });
+
+  it("should handle getBlockNumber timeout", async () => {
+    mockPublicClient.getBlockNumber.mockReturnValue(new Promise<bigint>(() => {}));
+    mockPublicClient.getLogs.mockResolvedValue([]);
+
+    const { result } = renderHook(
+      () =>
+        useNftMintedEventsPolling({
+          contractAddress: mockContractAddress,
+          pollInterval: 0,
+          requestTimeout: 100,
+        }),
+      { wrapper },
+    );
+
+    expect(result.current.isLoading).toBe(true);
+
+    await vi.waitFor(
+      () => {
+        expect(result.current.isLoading).toBe(false);
+      },
+      { timeout: 5000 },
+    );
+
+    expect(result.current.error).toContain("timed out");
+  }, 10000);
+
+  it("should handle getLogs timeout in fetchEventsInRange", async () => {
+    let callCount = 0;
+    mockPublicClient.getBlockNumber.mockImplementation(() => {
+      callCount++;
+      return Promise.resolve(callCount === 1 ? 1000n : 1010n);
+    });
+    mockPublicClient.getLogs.mockReturnValue(new Promise(() => {}));
+
+    const { result } = renderHook(
+      () =>
+        useNftMintedEventsPolling({
+          contractAddress: mockContractAddress,
+          pollInterval: 0,
+          maxRange: 10,
+          requestTimeout: 100,
+        }),
+      { wrapper },
+    );
+
+    await vi.waitFor(
+      () => {
+        expect(result.current.error).toContain("timed out");
+      },
+      { timeout: 5000 },
+    );
+  }, 10000);
 });
