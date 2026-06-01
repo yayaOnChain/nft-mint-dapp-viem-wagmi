@@ -135,6 +135,19 @@ describe("NftCard", () => {
         expect(container).toBeInTheDocument();
       });
     });
+
+    it("should set imageError when metadata fetch returns non-ok response", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      render(<NftCard nft={mockNFT} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("🎨")).toBeInTheDocument();
+      });
+    });
   });
 
   describe("image handling", () => {
@@ -149,6 +162,25 @@ describe("NftCard", () => {
       await waitFor(() => {
         const img = screen.getByAltText(/NFT #123/i) as HTMLImageElement;
         expect(img.src).toBe("https://ipfs.io/ipfs/QmImage123");
+      });
+    });
+
+    it("should handle IPFS image URL in metadata", async () => {
+      const ipfsImageMetadata = {
+        ...mockMetadata,
+        image: "ipfs://QmImageIPFS",
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        json: async () => ipfsImageMetadata,
+        ok: true,
+      });
+
+      render(<NftCard nft={mockNFT} />);
+
+      await waitFor(() => {
+        const img = screen.getByAltText(/NFT #123/i) as HTMLImageElement;
+        expect(img.src).toBe("https://ipfs.io/ipfs/QmImageIPFS");
       });
     });
 
@@ -175,6 +207,31 @@ describe("NftCard", () => {
       // Just verify the component doesn't crash
       await waitFor(() => {
         expect(screen.getByAltText(/NFT #123/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should show placeholder when all IPFS gateways are exhausted", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        json: async () => mockMetadata,
+        ok: true,
+      });
+
+      render(<NftCard nft={mockNFT} />);
+
+      await waitFor(() => {
+        expect(screen.getByAltText(/NFT #123/i)).toBeInTheDocument();
+      });
+
+      const img = screen.getByAltText(/NFT #123/i) as HTMLImageElement;
+
+      // Exhaust all 4 gateways (indices 0, 1, 2, 3)
+      fireEvent.error(img);
+      fireEvent.error(img);
+      fireEvent.error(img);
+      fireEvent.error(img);
+
+      await waitFor(() => {
+        expect(screen.getByText("🎨")).toBeInTheDocument();
       });
     });
 
