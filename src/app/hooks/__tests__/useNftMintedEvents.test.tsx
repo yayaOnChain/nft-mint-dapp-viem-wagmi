@@ -211,6 +211,35 @@ describe("useNftMintedEvents", () => {
       );
     });
 
+    it("should default blockNumber to BigInt(0) when not provided", async () => {
+      const onNewMintMock = vi.fn();
+
+      renderHook(
+        () =>
+          useNftMintedEvents({
+            contractAddress: mockContractAddress,
+            onNewMint: onNewMintMock,
+          }),
+        { wrapper },
+      );
+
+      act(() => {
+        onLogsCallback?.([
+          {
+            args: { minter: "0xMinter" as `0x${string}`, tokenId: 1n },
+            transactionHash: "0xTxHash" as `0x${string}`,
+            blockNumber: undefined as unknown as bigint,
+          },
+        ]);
+      });
+
+      await waitFor(() => {
+        expect(onNewMintMock).toHaveBeenCalledWith(
+          expect.objectContaining({ blockNumber: BigInt(0) })
+        );
+      });
+    });
+
     it("should handle multiple logs in single event", async () => {
       const { result } = renderHook(
         () => useNftMintedEvents({ contractAddress: mockContractAddress }),
@@ -290,6 +319,38 @@ describe("useNftMintedEvents", () => {
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining("[useNftMintedEvents] Event subscription error")
       );
+    });
+
+    it("should silently ignore filter not found errors", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      renderHook(
+        () => useNftMintedEvents({ contractAddress: mockContractAddress }),
+        { wrapper },
+      );
+
+      act(() => {
+        onErrorCallback?.(new Error("filter not found"));
+      });
+
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+    });
+
+    it("should stop warning after exceeding maxErrors", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      renderHook(
+        () => useNftMintedEvents({ contractAddress: mockContractAddress }),
+        { wrapper },
+      );
+
+      for (let i = 0; i < 4; i++) {
+        act(() => {
+          onErrorCallback?.(new Error("RPC error"));
+        });
+      }
+
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(3);
     });
   });
 
