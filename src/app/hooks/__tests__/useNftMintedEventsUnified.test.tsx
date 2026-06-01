@@ -17,6 +17,11 @@ vi.mock("@/hooks/useNftMintedEventsPolling", () => ({
   useNftMintedEventsPolling: vi.fn(),
 }));
 
+const envState = vi.hoisted(() => ({ useWebSocket: false }));
+vi.mock("@/config/env", () => ({
+  get useWebSocket() { return envState.useWebSocket; },
+}));
+
 import { useNftMintedEvents } from "@/hooks/useNftMintedEvents";
 import { useNftMintedEventsPolling } from "@/hooks/useNftMintedEventsPolling";
 
@@ -57,6 +62,7 @@ describe("useNftMintedEventsUnified", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    envState.useWebSocket = false;
   });
 
   afterEach(() => {
@@ -223,6 +229,32 @@ describe("useNftMintedEventsUnified", () => {
           onNewMint: mockOnNewMint,
         }),
       );
+    });
+
+    it("should return WebSocket result when WebSocket is enabled", () => {
+      envState.useWebSocket = true;
+
+      const mockWebSocketResult: UseNftMintedEventsReturn = {
+        recentMints: [{ tokenId: 3n, minter: mockContractAddress, timestamp: Date.now() }],
+      };
+      const mockPollingResult: UseNftMintedEventsPollingReturn = { recentMints: [], isLoading: false, error: null };
+
+      vi.mocked(useNftMintedEvents).mockReturnValue(mockWebSocketResult);
+      vi.mocked(useNftMintedEventsPolling).mockReturnValue(mockPollingResult);
+
+      const { result } = renderHook(
+        () =>
+          useNftMintedEventsUnified({
+            contractAddress: mockContractAddress,
+          }),
+        { wrapper },
+      );
+
+      expect(result.current).toEqual({
+        recentMints: [{ tokenId: 3n, minter: mockContractAddress, timestamp: expect.any(Number) }],
+      });
+      expect(result.current).not.toHaveProperty("isLoading");
+      expect(result.current).not.toHaveProperty("error");
     });
 
     it("should use default pollInterval of 60000 for polling hook", () => {
