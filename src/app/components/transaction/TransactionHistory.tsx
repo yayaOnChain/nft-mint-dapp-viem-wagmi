@@ -157,9 +157,7 @@ export const TransactionHistory = ({
    * Handle Load More button click - fetch next page of transactions
    */
   const handleLoadMore = () => {
-    if (pageKey) {
-      fetchTransactions(pageKey, true);
-    }
+    fetchTransactions(pageKey, true);
   };
 
   const handleRefresh = () => {

@@ -50,6 +50,19 @@ vi.mock("@/abi/myNft", () => ({
   myNftAbi: [],
 }));
 
+const mockPagination = vi.hoisted(() => ({ defaultLimit: 10 }));
+
+vi.mock("@/lib/constants", async () => {
+  const actual = await vi.importActual("@/lib/constants") as typeof import("@/lib/constants");
+  return {
+    ...actual,
+    UI_CONFIG: {
+      ...actual.UI_CONFIG,
+      pagination: mockPagination,
+    },
+  };
+});
+
 import { TransactionHistory } from "@/components/transaction/TransactionHistory";
 
 const createTestWrapper = () => {
@@ -101,6 +114,7 @@ describe("TransactionHistory", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPagination.defaultLimit = 10;
 
     mockUseAccount.mockReturnValue({
       address: mockAddress,
@@ -178,6 +192,20 @@ describe("TransactionHistory", () => {
       await waitFor(() => {
         expect(screen.getByText(/⚠️ Failed to fetch/i)).toBeInTheDocument();
       });
+    });
+
+    it("should use generic error message for non-Error rejections", async () => {
+      mockGetAssetTransfers.mockRejectedValue("Raw string error");
+
+      render(<TransactionHistory />, { wrapper });
+
+      await waitFor(() => {
+        expect(screen.getByText(/⚠️/i)).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByText(/Failed to fetch data/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -338,6 +366,36 @@ describe("TransactionHistory", () => {
     });
   });
 
+  describe("chain configuration", () => {
+    it("should use default chain ID when chain is undefined", async () => {
+      mockUseAccount.mockReturnValue({
+        address: mockAddress,
+        isConnected: true,
+        chain: undefined,
+      });
+
+      render(<TransactionHistory />, { wrapper });
+
+      await waitFor(() => {
+        expect(mockGetAssetTransfers).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("filter limit fallback", () => {
+    it("should fallback to default limit when filter limit is falsy", async () => {
+      mockPagination.defaultLimit = 0;
+
+      render(<TransactionHistory />, { wrapper });
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /refresh/i }),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
   describe("transaction classification", () => {
     it("should classify mint transactions correctly (from 0x0)", async () => {
       const mintTransfer = {
@@ -386,6 +444,66 @@ describe("TransactionHistory", () => {
     });
   });
 
+  describe("missing timestamp handling", () => {
+    beforeEach(() => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    it("should fetch missing timestamps via getBlockByNumber when timestamp is 0", async () => {
+      const transferWithMissingTimestamp = {
+        tokenId: 3n,
+        txHash: "0x1111111111111111111111111111111111111111111111111111111111111111" as `0x${string}`,
+        timestamp: 0,
+        blockNum: "123458",
+        from: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+        to: mockAddress,
+        type: "mint" as const,
+      };
+
+      mockGetAssetTransfers.mockResolvedValue({
+        transfers: [transferWithMissingTimestamp],
+        pageKey: undefined,
+      });
+
+      render(<TransactionHistory />, { wrapper });
+
+      await waitFor(() => {
+        expect(mockGetBlockByNumber).toHaveBeenCalledWith("123458");
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("#3")).toBeInTheDocument();
+      });
+    });
+
+    it("should handle errors when fetching missing timestamps", async () => {
+      mockGetBlockByNumber.mockRejectedValue(new Error("Block fetch failed"));
+
+      const transferWithMissingTimestamp = {
+        tokenId: 4n,
+        txHash: "0x2222222222222222222222222222222222222222222222222222222222222222" as `0x${string}`,
+        timestamp: 0,
+        blockNum: "123459",
+        from: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+        to: mockAddress,
+        type: "mint" as const,
+      };
+
+      mockGetAssetTransfers.mockResolvedValue({
+        transfers: [transferWithMissingTimestamp],
+        pageKey: undefined,
+      });
+
+      render(<TransactionHistory />, { wrapper });
+
+      await waitFor(() => {
+        expect(screen.getByText("#4")).toBeInTheDocument();
+      });
+
+      expect(console.error).toHaveBeenCalled();
+    });
+  });
+
   describe("refreshKey prop", () => {
     it("should trigger re-fetch when refreshKey prop changes", async () => {
       const { rerender } = render(<TransactionHistory refreshKey={0} />, {
@@ -409,6 +527,22 @@ describe("TransactionHistory", () => {
   describe("UI elements", () => {
     it("should have Refresh button in header", () => {
       render(<TransactionHistory />, { wrapper });
+
+      expect(
+        screen.getByRole("button", { name: /refresh/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should execute refresh when button is clicked", async () => {
+      render(<TransactionHistory />, { wrapper });
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /refresh/i }),
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /refresh/i }));
 
       expect(
         screen.getByRole("button", { name: /refresh/i }),
