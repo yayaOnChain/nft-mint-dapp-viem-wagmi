@@ -114,7 +114,6 @@ A modern, production-ready decentralized application (DApp) for minting NFTs on 
    ```env
    # Server-side only (DO NOT prefix with NEXT_PUBLIC_)
    PRIVATE_KEY=your_private_key_here
-   SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
    ALCHEMY_API_KEY=your_alchemy_api_key
    ALCHEMY_NETWORK=eth-sepolia
 
@@ -436,7 +435,6 @@ The built files will be in the `.next/` directory.
 2. Import the project in Vercel
 3. Add your environment variables in Vercel dashboard:
    - `PRIVATE_KEY`
-   - `SEPOLIA_RPC_URL`
    - `ALCHEMY_API_KEY`
    - `ALCHEMY_NETWORK`
    - `PINATA_JWT`
@@ -444,6 +442,7 @@ The built files will be in the `.next/` directory.
    - `NEXT_PUBLIC_USE_WEBSOCKET`
    - `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`
    - `NEXT_PUBLIC_CONTRACT_ADDRESS`
+   - `NEXT_PUBLIC_SEPOLIA_RPC_URL`
 4. Deploy!
 
 ### Hosting
